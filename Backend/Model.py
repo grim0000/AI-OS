@@ -7,7 +7,7 @@ CohereAPIKey=env_vars.get("CohereAPIKey")
 co=cohere.Client(api_key=CohereAPIKey)
 
 funcs = [
-    "exit", "general", "realtime", "open", "close", "play", "generate image", "system", "content", "google search", "youtube search", "reminder"
+    "exit", "general", "realtime", "open", "close", "play", "generate image", "smart_automation", "content", "google search", "youtube search", "reminder", "search"
 ]
 
 messages=[]
@@ -22,7 +22,7 @@ You will decide whether a query is a 'general' query, a 'realtime' query, or is 
 -> Respond with 'play (song name)' if a query is asking to play any song like 'play afsanay by ys', 'play let her go', etc. but if the query is asking to play multiple songs, respond with 'play 1st song name, play 2nd song name' and so on.
 -> Respond with 'generate image (image prompt)' if a query is requesting to generate a image with given prompt like 'generate image of a lion', 'generate image of a cat', etc. but if the query is asking to generate multiple images, respond with 'generate image 1st image prompt, generate image 2nd image prompt' and so on.
 -> Respond with 'reminder (datetime with message)' if a query is requesting to set a reminder like 'set a reminder at 9:00pm on 25th june for my business meeting.' respond with 'reminder 9:00pm 25th june business meeting'.
--> Respond with 'system (task name)' if a query is asking to mute, unmute, volume up, volume down , etc. but if the query is asking to do multiple tasks, respond with 'system 1st task, system 2nd task', etc.
+-> Respond with 'smart_automation (full query)' if a query is asking to perform any system automation, open applications, control music, manage files, get system information, or perform any computer-related tasks. This includes but is not limited to: opening apps, playing music, system controls, file operations, system monitoring, etc. The smart automation will intelligently classify and execute the appropriate action.
 -> Respond with 'content (topic)' if a query is asking to write any type of content like application, codes, emails or anything else about a specific topic but if the query is asking to write multiple types of content, respond with 'content 1st topic, content 2nd topic' and so on.
 -> Respond with 'google search (topic)' if a query is asking to search a specific topic on google but if the query is asking to search multiple topics on google, respond with 'google search 1st topic, google search 2nd topic' and so on.
 -> Respond with 'youtube search (topic)' if a query is asking to search a specific topic on youtube but if the query is asking to search multiple topics on youtube, respond with 'youtube search 1st topic, youtube search 2nd topic' and so on.

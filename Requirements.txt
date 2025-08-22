@@ -2,9 +2,7 @@ python-dotenv
 groq
 AppOpener
 pywhatkit
-bs4
 pillow
-rich
 requests
 Keyboard
 cohere
@@ -19,3 +17,10 @@ send2trash
 SpeechRecognition
 pyttsx3
 pyaudio
+google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+opencv-python
+mss
+psutil

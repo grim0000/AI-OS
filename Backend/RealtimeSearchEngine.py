@@ -30,7 +30,7 @@ except (FileNotFoundError, ValueError):
 
 
 def GoogleSearch(query):
-    results = list(search(query, advanced=True, num_results=5))
+    results = list(search(query, advanced=True, num_results=3))
     Answer = f"The search results for '{query}' are:\n[start]\n"
 
     for i in results:
@@ -93,11 +93,11 @@ def RealtimeSearchEngine(prompt):
 
    
     completion = client.chat.completions.create(
-        model="llama3-70b-8192",
+        model="llama-3.1-8b-instant",
         messages=full_messages,
-        max_tokens=1024,
-        temperature=0.7,
-        top_p=1,
+        max_tokens=384,
+        temperature=0.6,
+        top_p=0.95,
         stream=True,
         stop=None
     )

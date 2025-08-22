@@ -129,6 +129,15 @@ def SpeechRecognition():
     
     while True:
         try:
+            # Check if mic was turned off (interrupt)
+            try:
+                with open(rf'{TempDirPath}/Mic.data', "r", encoding='utf-8') as file:
+                    mic_status = file.read().strip()
+                if mic_status == "False":
+                    driver.find_element(by=By.ID, value="end").click()
+                    return None  # Return None to indicate interruption
+            except:
+                pass
             
             Text = driver.find_element(by=By.ID, value="output").text
             

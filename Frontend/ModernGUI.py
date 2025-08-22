@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QStackedWidget, 
                              QWidget, QLineEdit, QGridLayout, QVBoxLayout, QHBoxLayout, 
-                             QPushButton, QLabel, QFrame, QSizePolicy, QGraphicsDropShadowEffect)
+                             QPushButton, QLabel, QFrame, QSizePolicy, QGraphicsDropShadowEffect,
+                             QComboBox)
 from PyQt5.QtGui import (QIcon, QFont, QColor, QPainter, QMovie, QTextCharFormat, 
                          QPixmap, QTextBlockFormat, QTextCursor, QLinearGradient, QPalette)
 from PyQt5.QtCore import Qt, QSize, QTimer, QPropertyAnimation, QEasingCurve, QRect
@@ -82,9 +83,253 @@ class ModernChatSection(QWidget):
         self.initUI()
         
     def initUI(self):
-        layout = QVBoxLayout(self)
-        layout.setContentsMargins(20, 20, 20, 20)
-        layout.setSpacing(10)
+        desktop = QApplication.desktop()
+        screen_width = desktop.screenGeometry().width()
+        screen_height = desktop.screenGeometry().height()
+        
+        # Main horizontal layout with chat on left, main interface on right
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        
+        # Left side - Chat Panel (35% width)
+        chat_panel = QWidget()
+        chat_panel.setFixedWidth(int(screen_width * 0.35))
+        chat_panel.setStyleSheet("""
+            QWidget {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #1e1e2e, stop:1 #181825);
+                border-right: 3px solid #89b4fa;
+            }
+        """)
+        
+        chat_layout = QVBoxLayout(chat_panel)
+        chat_layout.setContentsMargins(15, 15, 15, 15)
+        chat_layout.setSpacing(15)
+        
+        # Chat title with better colors
+        chat_title = QLabel("💬 Chat History")
+        chat_title.setStyleSheet("""
+            QLabel {
+                color: #89b4fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 20px;
+                font-weight: bold;
+                padding: 15px;
+                background: rgba(137, 180, 250, 0.1);
+                border-radius: 10px;
+                border: 2px solid rgba(137, 180, 250, 0.3);
+            }
+        """)
+        chat_layout.addWidget(chat_title)
+        
+        # Chat text area with better colors and larger fonts
+        self.chat_text_edit = QTextEdit()
+        self.chat_text_edit.setReadOnly(True)
+        self.chat_text_edit.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.chat_text_edit.setFrameStyle(QFrame.NoFrame)
+        
+        self.chat_text_edit.setStyleSheet("""
+            QTextEdit {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #313244, stop:1 #1e1e2e);
+                color: #cdd6f4;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                border: 2px solid #89b4fa;
+                border-radius: 15px;
+                padding: 15px;
+                selection-background-color: #89b4fa;
+            }
+            QTextEdit QScrollBar:vertical {
+                background: #1e1e2e;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QTextEdit QScrollBar::handle:vertical {
+                background: #89b4fa;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QTextEdit QScrollBar::handle:vertical:hover {
+                background: #b4befe;
+            }
+        """)
+        chat_layout.addWidget(self.chat_text_edit)
+        
+        # Device selection section
+        device_layout = QVBoxLayout()
+        device_layout.setSpacing(10)
+        
+        # Input device dropdown
+        input_label = QLabel("🎤 Input Device:")
+        input_label.setStyleSheet("""
+            QLabel {
+                color: #89b4fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
+        device_layout.addWidget(input_label)
+        
+        self.input_device_combo = QComboBox()
+        self.input_device_combo.setStyleSheet("""
+            QComboBox {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #313244, stop:1 #1e1e2e);
+                border: 2px solid #89b4fa;
+                border-radius: 8px;
+                color: #cdd6f4;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                padding: 8px 12px;
+                min-width: 200px;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid #89b4fa;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                background: #1e1e2e;
+                border: 2px solid #89b4fa;
+                border-radius: 8px;
+                color: #cdd6f4;
+                selection-background-color: #89b4fa;
+            }
+        """)
+        self.populate_input_devices()
+        device_layout.addWidget(self.input_device_combo)
+        
+        # Output device dropdown
+        output_label = QLabel("🔊 Output Device:")
+        output_label.setStyleSheet("""
+            QLabel {
+                color: #89b4fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
+        device_layout.addWidget(output_label)
+        
+        self.output_device_combo = QComboBox()
+        self.output_device_combo.setStyleSheet("""
+            QComboBox {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #313244, stop:1 #1e1e2e);
+                border: 2px solid #89b4fa;
+                border-radius: 8px;
+                color: #cdd6f4;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                padding: 8px 12px;
+                min-width: 200px;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid #89b4fa;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                background: #1e1e2e;
+                border: 2px solid #89b4fa;
+                border-radius: 8px;
+                color: #cdd6f4;
+                selection-background-color: #89b4fa;
+            }
+        """)
+        self.populate_output_devices()
+        device_layout.addWidget(self.output_device_combo)
+        
+        chat_layout.addLayout(device_layout)
+        
+        # Control buttons row
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
+        
+        # Reset button with better colors
+        self.reset_button = QPushButton("🔄 Reset")
+        self.reset_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f38ba8, stop:1 #eba0ac);
+                border: 2px solid #f38ba8;
+                border-radius: 10px;
+                color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                padding: 12px 20px;
+                min-width: 100px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f5c2e7, stop:1 #f38ba8);
+                border: 2px solid #f5c2e7;
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #eba0ac, stop:1 #f38ba8);
+            }
+        """)
+        self.reset_button.clicked.connect(self.reset_assistant)
+        
+        # Clear chat button with better colors
+        self.clear_chat_button = QPushButton("🗑️ Clear")
+        self.clear_chat_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #fab387, stop:1 #f9e2af);
+                border: 2px solid #fab387;
+                border-radius: 10px;
+                color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                padding: 12px 20px;
+                min-width: 100px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #fef3c7, stop:1 #fab387);
+                border: 2px solid #fef3c7;
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f9e2af, stop:1 #fab387);
+            }
+        """)
+        self.clear_chat_button.clicked.connect(self.clear_chat)
+        
+        button_layout.addWidget(self.reset_button)
+        button_layout.addWidget(self.clear_chat_button)
+        chat_layout.addLayout(button_layout)
+        
+        # Right side - Main Interface (65% width)
+        main_interface = QWidget()
+        main_interface.setStyleSheet("""
+            QWidget {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #11111b, stop:1 #1e1e2e);
+            }
+        """)
+        main_interface_layout = QVBoxLayout(main_interface)
+        main_interface_layout.setContentsMargins(0, 0, 0, 0)
+        main_interface_layout.setSpacing(0)
         
         # Create animated background with GIF
         self.background_label = QLabel()
@@ -96,40 +341,38 @@ class ModernChatSection(QWidget):
             gif_path = GraphicsDirectoryPath("7ZN3.gif")
             if os.path.exists(gif_path):
                 movie = QMovie(gif_path)
-                movie.setScaledSize(QSize(400, 300))  # Scale the GIF for background
+                movie.setScaledSize(QSize(400, 400))  # Restored original size
                 self.background_label.setMovie(movie)
                 movie.start()
         except Exception as e:
             print(f"Error loading background GIF: {e}")
         
-        # Modern chat text edit with gradient background
-        self.chat_text_edit = QTextEdit()
-        self.chat_text_edit.setReadOnly(True)
-        self.chat_text_edit.setTextInteractionFlags(Qt.NoTextInteraction)
-        self.chat_text_edit.setFrameStyle(QFrame.NoFrame)
-        
-        # Apply modern styling
-        self.chat_text_edit.setStyleSheet("""
-            QTextEdit {
-                background: qlineargradient(x1:0, y1:0, x2:1, y2:1,
-                    stop:0 #1a1a2e, stop:1 #16213e);
-                border: none;
-                border-radius: 15px;
-                color: #ffffff;
+        # Status label with better colors
+        self.status_label = QLabel("Ready to assist you...")
+        self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setStyleSheet("""
+            QLabel {
+                color: #89b4fa;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 14px;
-                padding: 20px;
-                selection-background-color: #4a90e2;
+                font-size: 18px;
+                font-weight: 300;
+                margin: 20px;
+                padding: 10px;
+                background: rgba(137, 180, 250, 0.1);
+                border-radius: 10px;
+                border: 1px solid rgba(137, 180, 250, 0.3);
             }
         """)
         
-        # Add background and chat text edit
-        layout.addWidget(self.background_label)
-        layout.addWidget(self.chat_text_edit)
-        self.setStyleSheet("background: transparent;")
-        layout.setSizeConstraint(QVBoxLayout.SetDefaultConstraint)
-        layout.setStretch(1, 1)
-        self.setSizePolicy(QSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding))
+        # Layout setup for main interface
+        main_interface_layout.addStretch(1)
+        main_interface_layout.addWidget(self.background_label, alignment=Qt.AlignCenter)
+        main_interface_layout.addWidget(self.status_label, alignment=Qt.AlignCenter)
+        main_interface_layout.addStretch(1)
+        
+        # Add both panels to main layout
+        main_layout.addWidget(chat_panel)
+        main_layout.addWidget(main_interface)
         
         # Set default text color
         text_color = QColor("#ffffff")
@@ -144,7 +387,9 @@ class ModernChatSection(QWidget):
                 messages = file.read()
                 
             if messages != last_processed_message and messages.strip():
-                # Don't clear the chat, just append new messages
+                # Clear the chat and display all messages to maintain history
+                self.chat_text_edit.clear()
+                
                 lines = messages.split('\n')
                 new_lines = []
                 
@@ -163,18 +408,14 @@ class ModernChatSection(QWidget):
                         else:
                             new_lines.append(line)
                 
-                # Only add new messages that aren't already displayed - optimized
-                current_text = self.chat_text_edit.toPlainText()
-                added_count = 0
+                # Display all messages with proper colors
                 for line in new_lines:
-                    if line not in current_text and added_count < 10:  # Limit to prevent lag
-                        if "👤" in line:
-                            self.addMessages(line, "#4a90e2")
-                        elif "🤖" in line:
-                            self.addMessages(line, "#50c878")
-                        else:
-                            self.addMessages(line, "#ffffff")
-                        added_count += 1
+                    if "👤" in line:
+                        self.addMessages(line, "#89b4fa")  # Blue for user
+                    elif "🤖" in line:
+                        self.addMessages(line, "#a6e3a1")  # Green for AI
+                    else:
+                        self.addMessages(line, "#cdd6f4")  # White for other
                 
                 # Update the last processed message
                 last_processed_message = messages
@@ -207,6 +448,645 @@ class ModernChatSection(QWidget):
         self.chat_text_edit.verticalScrollBar().setValue(
             self.chat_text_edit.verticalScrollBar().maximum()
         )
+    
+    def reset_assistant(self):
+        """Reset the assistant to listening state and clear any ongoing operations"""
+        try:
+            # Set microphone to listening state
+            SetMicrophoneStatus("True")
+            SetAssistantStatus("Listening...")
+            
+            # Clear any ongoing operations by writing empty status
+            with open(TempDirectoryPath('Status.data'), "w", encoding='utf-8') as file:
+                file.write("Listening...")
+            
+            # Update UI
+            self.status_label.setText("Listening...")
+            
+            print("🔄 Assistant reset to listening state")
+            
+        except Exception as e:
+            print(f"Error resetting assistant: {e}")
+    
+    def clear_chat(self):
+        """Clear the chat history"""
+        try:
+            # Clear the chat display
+            self.chat_text_edit.clear()
+            
+            # Clear the chat data file
+            with open(TempDirectoryPath('Responses.data'), "w", encoding='utf-8') as file:
+                file.write("")
+            
+            print("🗑️ Chat history cleared")
+            
+        except Exception as e:
+            print(f"Error clearing chat: {e}")
+    
+    def populate_input_devices(self):
+        """Populate input device dropdown with available microphones"""
+        try:
+            import pyaudio
+            p = pyaudio.PyAudio()
+            
+            self.input_device_combo.clear()
+            self.input_device_combo.addItem("Default Microphone")
+            
+            for i in range(p.get_device_count()):
+                device_info = p.get_device_info_by_index(i)
+                if device_info['maxInputChannels'] > 0:  # Input device
+                    device_name = device_info['name']
+                    self.input_device_combo.addItem(f"{device_name}")
+            
+            p.terminate()
+            
+        except Exception as e:
+            print(f"Error populating input devices: {e}")
+            self.input_device_combo.addItem("Default Microphone")
+    
+    def populate_output_devices(self):
+        """Populate output device dropdown with available speakers"""
+        try:
+            import pyaudio
+            p = pyaudio.PyAudio()
+            
+            self.output_device_combo.clear()
+            self.output_device_combo.addItem("Default Speakers")
+            
+            for i in range(p.get_device_count()):
+                device_info = p.get_device_info_by_index(i)
+                if device_info['maxOutputChannels'] > 0:  # Output device
+                    device_name = device_info['name']
+                    self.output_device_combo.addItem(f"{device_name}")
+            
+            p.terminate()
+            
+        except Exception as e:
+            print(f"Error populating output devices: {e}")
+            self.output_device_combo.addItem("Default Speakers")
+
+class ModernIntegratedScreen(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.initUI()
+        
+    def initUI(self):
+        desktop = QApplication.desktop()
+        screen_width = desktop.screenGeometry().width()
+        screen_height = desktop.screenGeometry().height()
+        
+        # Main horizontal layout with chat on left, main interface on right
+        main_layout = QHBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+        
+        # Create pitch black background
+        self.setStyleSheet("""
+            QWidget {
+                background: #000000;
+            }
+        """)
+        
+        # Left side - Chat Panel (35% width)
+        chat_panel = QWidget()
+        chat_panel.setFixedWidth(int(screen_width * 0.35))
+        chat_panel.setStyleSheet("""
+            QWidget {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #1e1e2e, stop:1 #181825);
+                border-right: 3px solid #89b4fa;
+            }
+        """)
+        
+        chat_layout = QVBoxLayout(chat_panel)
+        chat_layout.setContentsMargins(15, 15, 15, 15)
+        chat_layout.setSpacing(15)
+        
+        # Chat title with better colors
+        chat_title = QLabel("💬 Chat History")
+        chat_title.setStyleSheet("""
+            QLabel {
+                color: #89b4fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 20px;
+                font-weight: bold;
+                padding: 15px;
+                background: rgba(137, 180, 250, 0.1);
+                border-radius: 10px;
+                border: 2px solid rgba(137, 180, 250, 0.3);
+            }
+        """)
+        chat_layout.addWidget(chat_title)
+        
+        # Chat text area with better colors and larger fonts
+        self.chat_text_edit = QTextEdit()
+        self.chat_text_edit.setReadOnly(True)
+        self.chat_text_edit.setTextInteractionFlags(Qt.NoTextInteraction)
+        self.chat_text_edit.setFrameStyle(QFrame.NoFrame)
+        
+        self.chat_text_edit.setStyleSheet("""
+            QTextEdit {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #313244, stop:1 #1e1e2e);
+                color: #cdd6f4;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                border: 2px solid #89b4fa;
+                border-radius: 15px;
+                padding: 15px;
+                selection-background-color: #89b4fa;
+            }
+            QTextEdit QScrollBar:vertical {
+                background: #1e1e2e;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QTextEdit QScrollBar::handle:vertical {
+                background: #89b4fa;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QTextEdit QScrollBar::handle:vertical:hover {
+                background: #b4befe;
+            }
+        """)
+        chat_layout.addWidget(self.chat_text_edit)
+        
+        # Device selection section
+        device_layout = QVBoxLayout()
+        device_layout.setSpacing(10)
+        
+        # Input device dropdown
+        input_label = QLabel("🎤 Input Device:")
+        input_label.setStyleSheet("""
+            QLabel {
+                color: #89b4fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
+        device_layout.addWidget(input_label)
+        
+        self.input_device_combo = QComboBox()
+        self.input_device_combo.setStyleSheet("""
+            QComboBox {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #313244, stop:1 #1e1e2e);
+                border: 2px solid #89b4fa;
+                border-radius: 8px;
+                color: #cdd6f4;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                padding: 8px 12px;
+                min-width: 200px;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid #89b4fa;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                background: #1e1e2e;
+                border: 2px solid #89b4fa;
+                border-radius: 8px;
+                color: #cdd6f4;
+                selection-background-color: #89b4fa;
+            }
+        """)
+        self.populate_input_devices()
+        device_layout.addWidget(self.input_device_combo)
+        
+        # Output device dropdown
+        output_label = QLabel("🔊 Output Device:")
+        output_label.setStyleSheet("""
+            QLabel {
+                color: #89b4fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+            }
+        """)
+        device_layout.addWidget(output_label)
+        
+        self.output_device_combo = QComboBox()
+        self.output_device_combo.setStyleSheet("""
+            QComboBox {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #313244, stop:1 #1e1e2e);
+                border: 2px solid #89b4fa;
+                border-radius: 8px;
+                color: #cdd6f4;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                padding: 8px 12px;
+                min-width: 200px;
+            }
+            QComboBox::drop-down {
+                border: none;
+                width: 20px;
+            }
+            QComboBox::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 5px solid #89b4fa;
+                margin-right: 5px;
+            }
+            QComboBox QAbstractItemView {
+                background: #1e1e2e;
+                border: 2px solid #89b4fa;
+                border-radius: 8px;
+                color: #cdd6f4;
+                selection-background-color: #89b4fa;
+            }
+        """)
+        self.populate_output_devices()
+        device_layout.addWidget(self.output_device_combo)
+        
+        chat_layout.addLayout(device_layout)
+        
+        # Right side - Main Interface (65% width)
+        main_interface = QWidget()
+        main_interface.setStyleSheet("""
+            QWidget {
+                background: #000000;
+            }
+        """)
+        main_interface_layout = QVBoxLayout(main_interface)
+        main_interface_layout.setContentsMargins(0, 0, 0, 0)
+        main_interface_layout.setSpacing(0)
+        
+        # Create animated background with GIF
+        self.background_label = QLabel()
+        self.background_label.setAlignment(Qt.AlignCenter)
+        self.background_label.setStyleSheet("background: transparent;")
+        
+        # Load and display the 7ZN3.gif as background
+        try:
+            gif_path = GraphicsDirectoryPath("7ZN3.gif")
+            if os.path.exists(gif_path):
+                movie = QMovie(gif_path)
+                movie.setScaledSize(QSize(400, 400))  # Restored original size
+                self.background_label.setMovie(movie)
+                movie.start()
+        except Exception as e:
+            print(f"Error loading background GIF: {e}")
+        
+        # Status label with better colors
+        self.status_label = QLabel("Ready to assist you...")
+        self.status_label.setAlignment(Qt.AlignCenter)
+        self.status_label.setStyleSheet("""
+            QLabel {
+                color: #89b4fa;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 18px;
+                font-weight: 300;
+                margin: 20px;
+                padding: 10px;
+                background: rgba(137, 180, 250, 0.1);
+                border-radius: 10px;
+                border: 1px solid rgba(137, 180, 250, 0.3);
+            }
+        """)
+        
+        # Microphone button
+        self.mic_button = QPushButton()
+        self.mic_button.setFixedSize(120, 120)
+        self.mic_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #89b4fa, stop:1 #74c7ec);
+                border: none;
+                border-radius: 60px;
+                color: white;
+                font-size: 24px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #b4befe, stop:1 #89b4fa);
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #74c7ec, stop:1 #89b4fa);
+            }
+        """)
+        self.mic_button.setText("🎤")
+        self.mic_button.clicked.connect(self.toggle_mic)
+        
+        # Add drop shadow effect
+        shadow = QGraphicsDropShadowEffect()
+        shadow.setBlurRadius(20)
+        shadow.setColor(QColor(0, 0, 0, 80))
+        shadow.setOffset(0, 4)
+        self.mic_button.setGraphicsEffect(shadow)
+        
+        self.mic_active = False
+        self.update_mic_button()
+        
+        # Control buttons row (below GIF)
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(20)
+        button_layout.setAlignment(Qt.AlignCenter)
+        
+        # Reset button with better colors
+        self.reset_button = QPushButton("🔄 Reset")
+        self.reset_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f38ba8, stop:1 #eba0ac);
+                border: 2px solid #f38ba8;
+                border-radius: 10px;
+                color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                padding: 12px 20px;
+                min-width: 100px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f5c2e7, stop:1 #f38ba8);
+                border: 2px solid #f5c2e7;
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #eba0ac, stop:1 #f38ba8);
+            }
+        """)
+        self.reset_button.clicked.connect(self.reset_assistant)
+        
+        # Clear chat button with better colors
+        self.clear_chat_button = QPushButton("🗑️ Clear")
+        self.clear_chat_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #fab387, stop:1 #f9e2af);
+                border: 2px solid #fab387;
+                border-radius: 10px;
+                color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                padding: 12px 20px;
+                min-width: 100px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #fef3c7, stop:1 #fab387);
+                border: 2px solid #fef3c7;
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f9e2af, stop:1 #fab387);
+            }
+        """)
+        self.clear_chat_button.clicked.connect(self.clear_chat)
+        
+        button_layout.addWidget(self.reset_button)
+        button_layout.addWidget(self.clear_chat_button)
+        
+        # Layout setup for main interface
+        main_interface_layout.addStretch(1)
+        main_interface_layout.addWidget(self.background_label, alignment=Qt.AlignCenter)
+        main_interface_layout.addWidget(self.status_label, alignment=Qt.AlignCenter)
+        main_interface_layout.addWidget(self.mic_button, alignment=Qt.AlignCenter)
+        main_interface_layout.addLayout(button_layout)
+        main_interface_layout.addStretch(1)
+        
+        # Add both panels to main layout
+        main_layout.addWidget(chat_panel)
+        main_layout.addWidget(main_interface)
+        
+        # Set default text color
+        text_color = QColor("#ffffff")
+        text_color_text = QTextCharFormat()
+        text_color_text.setForeground(text_color)
+        self.chat_text_edit.setCurrentCharFormat(text_color_text)
+        
+        # Timer for chat updates - ultra fast updates
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.loadMessage)
+        self.timer.start(25)  # Ultra fast updates
+        
+        self.last_processed_message = ""
+        
+    def loadMessage(self):
+        try:
+            with open(TempDirectoryPath('Responses.data'), "r", encoding='utf-8') as file:
+                messages = file.read()
+                
+            if messages != self.last_processed_message and messages.strip():
+                # Clear the chat and display all messages to maintain history
+                self.chat_text_edit.clear()
+                
+                lines = messages.split('\n')
+                new_lines = []
+                
+                for line in lines:
+                    if line.strip():
+                        if ":" in line:
+                            parts = line.split(":", 1)
+                            if len(parts) == 2:
+                                speaker = parts[0].strip()
+                                message = parts[1].strip()
+                                
+                                if "Sunil" in speaker or "User" in speaker:
+                                    new_lines.append(f"👤 {message}")
+                                else:
+                                    new_lines.append(f"🤖 {message}")
+                        else:
+                            new_lines.append(line)
+                
+                # Display all messages with proper colors
+                for line in new_lines:
+                    if "👤" in line:
+                        self.addMessages(line, "#89b4fa")  # Blue for user
+                    elif "🤖" in line:
+                        self.addMessages(line, "#a6e3a1")  # Green for AI
+                    else:
+                        self.addMessages(line, "#cdd6f4")  # White for other
+                
+                # Update the last processed message
+                self.last_processed_message = messages
+                            
+        except Exception as e:
+            print(f"Error loading messages: {e}")
+        
+    def addMessages(self, message, color):
+        cursor = self.chat_text_edit.textCursor()
+        cursor.movePosition(QTextCursor.End)
+        
+        format = QTextCharFormat()
+        format.setForeground(QColor(color))
+        format.setFontWeight(QFont.Bold if color == "#89b4fa" else QFont.Normal)
+        
+        formatm = QTextBlockFormat()
+        formatm.setLineHeight(150, QTextBlockFormat.ProportionalHeight)
+        formatm.setTopMargin(10)
+        formatm.setBottomMargin(10)
+        
+        cursor.setCharFormat(format)
+        cursor.setBlockFormat(formatm)
+        cursor.insertText(message + "\n")
+        self.chat_text_edit.setTextCursor(cursor)
+        
+        # Auto-scroll to bottom to show latest messages
+        self.chat_text_edit.verticalScrollBar().setValue(
+            self.chat_text_edit.verticalScrollBar().maximum()
+        )
+    
+    def reset_assistant(self):
+        """Reset the assistant to listening state and clear any ongoing operations"""
+        try:
+            # Set microphone to listening state
+            SetMicrophoneStatus("True")
+            SetAssistantStatus("Listening...")
+            
+            # Clear any ongoing operations by writing empty status
+            with open(TempDirectoryPath('Status.data'), "w", encoding='utf-8') as file:
+                file.write("Listening...")
+            
+            # Update UI
+            self.status_label.setText("Listening...")
+            
+            print("🔄 Assistant reset to listening state")
+            
+        except Exception as e:
+            print(f"Error resetting assistant: {e}")
+    
+    def clear_chat(self):
+        """Clear the chat history"""
+        try:
+            # Clear the chat display
+            self.chat_text_edit.clear()
+            
+            # Clear the chat data file
+            with open(TempDirectoryPath('Responses.data'), "w", encoding='utf-8') as file:
+                file.write("")
+            
+            print("🗑️ Chat history cleared")
+            
+        except Exception as e:
+            print(f"Error clearing chat: {e}")
+    
+    def populate_input_devices(self):
+        """Populate input device dropdown with available microphones"""
+        try:
+            import pyaudio
+            p = pyaudio.PyAudio()
+            
+            self.input_device_combo.clear()
+            self.input_device_combo.addItem("Default Microphone")
+            
+            for i in range(p.get_device_count()):
+                device_info = p.get_device_info_by_index(i)
+                if device_info['maxInputChannels'] > 0:  # Input device
+                    device_name = device_info['name']
+                    self.input_device_combo.addItem(f"{device_name}")
+            
+            p.terminate()
+            
+        except Exception as e:
+            print(f"Error populating input devices: {e}")
+            self.input_device_combo.addItem("Default Microphone")
+    
+    def populate_output_devices(self):
+        """Populate output device dropdown with available speakers"""
+        try:
+            import pyaudio
+            p = pyaudio.PyAudio()
+            
+            self.output_device_combo.clear()
+            self.output_device_combo.addItem("Default Speakers")
+            
+            for i in range(p.get_device_count()):
+                device_info = p.get_device_info_by_index(i)
+                if device_info['maxOutputChannels'] > 0:  # Output device
+                    device_name = device_info['name']
+                    self.output_device_combo.addItem(f"{device_name}")
+            
+            p.terminate()
+            
+        except Exception as e:
+            print(f"Error populating output devices: {e}")
+            self.output_device_combo.addItem("Default Speakers")
+    
+    def toggle_mic(self):
+        """Toggle microphone on/off"""
+        try:
+            if self.mic_active:
+                # Turn off microphone
+                SetMicrophoneStatus("False")
+                self.mic_active = False
+                self.mic_button.setText("🔇")
+                self.status_label.setText("Microphone OFF")
+                print("🎤 Microphone turned OFF")
+            else:
+                # Turn on microphone
+                SetMicrophoneStatus("True")
+                self.mic_active = True
+                self.mic_button.setText("🎤")
+                self.status_label.setText("Listening...")
+                print("🎤 Microphone turned ON")
+            
+            self.update_mic_button()
+            
+        except Exception as e:
+            print(f"Error toggling microphone: {e}")
+    
+    def update_mic_button(self):
+        """Update microphone button appearance based on status"""
+        try:
+            if self.mic_active:
+                self.mic_button.setStyleSheet("""
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #a6e3a1, stop:1 #94e2d5);
+                        border: none;
+                        border-radius: 60px;
+                        color: white;
+                        font-size: 24px;
+                        font-weight: bold;
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #b4e6a8, stop:1 #a6e3a1);
+                    }
+                    QPushButton:pressed {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #94e2d5, stop:1 #a6e3a1);
+                    }
+                """)
+            else:
+                self.mic_button.setStyleSheet("""
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #f38ba8, stop:1 #eba0ac);
+                        border: none;
+                        border-radius: 60px;
+                        color: white;
+                        font-size: 24px;
+                        font-weight: bold;
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #f5c2e7, stop:1 #f38ba8);
+                    }
+                    QPushButton:pressed {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #eba0ac, stop:1 #f38ba8);
+                    }
+                """)
+        except Exception as e:
+            print(f"Error updating mic button: {e}")
 
 class ModernInitialScreen(QWidget):
     def __init__(self, parent=None):
@@ -218,8 +1098,8 @@ class ModernInitialScreen(QWidget):
         screen_width = desktop.screenGeometry().width()
         screen_height = desktop.screenGeometry().height()
         
-        # Main layout with gradient background
-        main_layout = QVBoxLayout()
+        # Main horizontal layout with chat on left, main interface on right
+        main_layout = QHBoxLayout()
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(0)
         
@@ -230,7 +1110,137 @@ class ModernInitialScreen(QWidget):
             }
         """)
         
-        # AI Assistant Logo/Animation with GIF
+        # Left side - Chat Panel (35% width) - Restored original design
+        chat_panel = QWidget()
+        chat_panel.setFixedWidth(int(screen_width * 0.35))
+        chat_panel.setStyleSheet("""
+            QWidget {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #2c3e50, stop:1 #34495e);
+                border-right: 3px solid #4a90e2;
+            }
+        """)
+        
+        chat_layout = QVBoxLayout(chat_panel)
+        chat_layout.setContentsMargins(15, 15, 15, 15)
+        chat_layout.setSpacing(15)
+        
+        # Chat title with original styling
+        chat_title = QLabel("💬 Chat History")
+        chat_title.setStyleSheet("""
+            QLabel {
+                color: #4a90e2;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 20px;
+                font-weight: bold;
+                padding: 15px;
+                background: rgba(74, 144, 226, 0.1);
+                border-radius: 10px;
+                border: 2px solid rgba(74, 144, 226, 0.3);
+            }
+        """)
+        chat_layout.addWidget(chat_title)
+        
+        # Chat text area with original styling and larger fonts
+        self.chat_text_edit = QTextEdit()
+        self.chat_text_edit.setStyleSheet("""
+            QTextEdit {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #34495e, stop:1 #2c3e50);
+                color: #ffffff;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                border: 2px solid #4a90e2;
+                border-radius: 15px;
+                padding: 15px;
+                selection-background-color: #4a90e2;
+            }
+            QTextEdit QScrollBar:vertical {
+                background: #2c3e50;
+                width: 12px;
+                border-radius: 6px;
+            }
+            QTextEdit QScrollBar::handle:vertical {
+                background: #4a90e2;
+                border-radius: 6px;
+                min-height: 20px;
+            }
+            QTextEdit QScrollBar::handle:vertical:hover {
+                background: #5ba0f2;
+            }
+        """)
+        self.chat_text_edit.setReadOnly(True)
+        chat_layout.addWidget(self.chat_text_edit)
+        
+        # Control buttons row
+        button_layout = QHBoxLayout()
+        button_layout.setSpacing(10)
+        
+        # Reset button with original styling
+        self.reset_button = QPushButton("🔄 Reset")
+        self.reset_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #e74c3c, stop:1 #c0392b);
+                border: 2px solid #e74c3c;
+                border-radius: 10px;
+                color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                padding: 12px 20px;
+                min-width: 100px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f75c4c, stop:1 #e74c3c);
+                border: 2px solid #f75c4c;
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #c0392b, stop:1 #a93226);
+            }
+        """)
+        self.reset_button.clicked.connect(self.reset_assistant)
+        
+        # Clear chat button
+        self.clear_chat_button = QPushButton("🗑️ Clear")
+        self.clear_chat_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f39c12, stop:1 #e67e22);
+                border: 2px solid #f39c12;
+                border-radius: 10px;
+                color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+                padding: 12px 20px;
+                min-width: 100px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #f4ac22, stop:1 #f39c12);
+                border: 2px solid #f4ac22;
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #e67e22, stop:1 #d35400);
+            }
+        """)
+        self.clear_chat_button.clicked.connect(self.clear_chat)
+        
+        button_layout.addWidget(self.reset_button)
+        button_layout.addWidget(self.clear_chat_button)
+        chat_layout.addLayout(button_layout)
+        
+        # Right side - Main Interface (65% width)
+        main_interface = QWidget()
+        main_interface_layout = QVBoxLayout(main_interface)
+        main_interface_layout.setContentsMargins(0, 0, 0, 0)
+        main_interface_layout.setSpacing(0)
+        
+        # AI Assistant Logo/Animation with GIF - Restored original size
         logo_label = QLabel()
         logo_label.setAlignment(Qt.AlignCenter)
         
@@ -239,7 +1249,7 @@ class ModernInitialScreen(QWidget):
             gif_path = GraphicsDirectoryPath("7ZN3.gif")
             if os.path.exists(gif_path):
                 movie = QMovie(gif_path)
-                movie.setScaledSize(QSize(400, 400))  # Enlarged GIF
+                movie.setScaledSize(QSize(400, 400))  # Restored original size
                 logo_label.setMovie(movie)
                 movie.start()
             else:
@@ -268,7 +1278,7 @@ class ModernInitialScreen(QWidget):
             """)
             logo_label.setText("🤖  AI")
         
-        # Status label with modern styling
+        # Status label with original styling
         self.status_label = QLabel("Ready to assist you...")
         self.status_label.setAlignment(Qt.AlignCenter)
         self.status_label.setStyleSheet("""
@@ -285,7 +1295,7 @@ class ModernInitialScreen(QWidget):
             }
         """)
         
-        # Modern microphone button
+        # Modern microphone button - Restored original size
         self.mic_button = QPushButton()
         self.mic_button.setFixedSize(120, 120)
         self.mic_button.setStyleSheet("""
@@ -318,14 +1328,19 @@ class ModernInitialScreen(QWidget):
         self.mic_button.setGraphicsEffect(shadow)
         
         self.mic_active = False
+        self.last_chat_content = ""
         self.update_mic_button()
         
-        # Layout setup
-        main_layout.addStretch(1)
-        main_layout.addWidget(logo_label, alignment=Qt.AlignCenter)
-        main_layout.addWidget(self.status_label, alignment=Qt.AlignCenter)
-        main_layout.addWidget(self.mic_button, alignment=Qt.AlignCenter)
-        main_layout.addStretch(1)
+        # Layout setup for main interface
+        main_interface_layout.addStretch(1)
+        main_interface_layout.addWidget(logo_label, alignment=Qt.AlignCenter)
+        main_interface_layout.addWidget(self.status_label, alignment=Qt.AlignCenter)
+        main_interface_layout.addWidget(self.mic_button, alignment=Qt.AlignCenter)
+        main_interface_layout.addStretch(1)
+        
+        # Add both panels to main layout
+        main_layout.addWidget(chat_panel)
+        main_layout.addWidget(main_interface)
         
         self.setLayout(main_layout)
         self.setFixedHeight(screen_height)
@@ -335,6 +1350,11 @@ class ModernInitialScreen(QWidget):
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.update_status)
         self.timer.start(25)  # Ultra fast updates
+        
+        # Timer for chat updates
+        self.chat_timer = QTimer(self)
+        self.chat_timer.timeout.connect(self.update_chat)
+        self.chat_timer.start(25)  # Ultra fast updates
         
     def toggle_mic(self):
         self.mic_active = not self.mic_active
@@ -380,6 +1400,43 @@ class ModernInitialScreen(QWidget):
                 }
             """)
             
+    def reset_assistant(self):
+        """Reset the assistant to listening state and clear any ongoing operations"""
+        try:
+            # Set microphone to listening state
+            SetMicrophoneStatus("True")
+            SetAssistantStatus("Listening...")
+            
+            # Clear any ongoing operations by writing empty status
+            with open(TempDirectoryPath('Status.data'), "w", encoding='utf-8') as file:
+                file.write("Listening...")
+            
+            # Update UI
+            self.mic_active = True
+            self.update_mic_button()
+            self.status_label.setText("Listening...")
+            
+            print("🔄 Assistant reset to listening state")
+            
+        except Exception as e:
+            print(f"Error resetting assistant: {e}")
+    
+    def clear_chat(self):
+        """Clear the chat history"""
+        try:
+            # Clear the chat display
+            self.chat_text_edit.clear()
+            self.last_chat_content = ""
+            
+            # Clear the chat data file
+            with open(TempDirectoryPath('Responses.data'), "w", encoding='utf-8') as file:
+                file.write("")
+            
+            print("🗑️ Chat history cleared")
+            
+        except Exception as e:
+            print(f"Error clearing chat: {e}")
+            
     def update_status(self):
         try:
             with open(TempDirectoryPath('Status.data'), "r", encoding='utf-8') as file:
@@ -388,6 +1445,47 @@ class ModernInitialScreen(QWidget):
                     self.status_label.setText(status)
         except:
             pass
+    
+    def update_chat(self):
+        """Update the chat display with latest messages"""
+        try:
+            with open(TempDirectoryPath('Responses.data'), "r", encoding='utf-8') as file:
+                content = file.read()
+                if content.strip() and content != self.last_chat_content:
+                    # Format the chat content with better styling
+                    formatted_content = self.format_chat_content(content)
+                    self.chat_text_edit.setHtml(formatted_content)
+                    self.last_chat_content = content
+                    
+                    # Auto-scroll to bottom
+                    self.chat_text_edit.verticalScrollBar().setValue(
+                        self.chat_text_edit.verticalScrollBar().maximum()
+                    )
+        except Exception as e:
+            print(f"Error updating chat: {e}")
+    
+    def format_chat_content(self, content):
+        """Format chat content with HTML styling"""
+        try:
+            lines = content.split('\n')
+            formatted_lines = []
+            
+            for line in lines:
+                if line.strip():
+                    if line.startswith(f"{env_var.get('Username', 'User')} :"):
+                        # User message styling
+                        formatted_lines.append(f'<p style="margin: 5px 0; padding: 8px; background: rgba(74, 144, 226, 0.1); border-radius: 8px; border-left: 3px solid #4a90e2;"><span style="color: #4a90e2; font-weight: bold;">{line}</span></p>')
+                    elif line.startswith(f"{env_var.get('AssistantName', 'AI')} :"):
+                        # Assistant message styling
+                        formatted_lines.append(f'<p style="margin: 5px 0; padding: 8px; background: rgba(46, 204, 113, 0.1); border-radius: 8px; border-left: 3px solid #2ecc71;"><span style="color: #2ecc71; font-weight: bold;">{line}</span></p>')
+                    else:
+                        # Regular message styling
+                        formatted_lines.append(f'<p style="margin: 3px 0; color: #ffffff;">{line}</p>')
+            
+            return '<br>'.join(formatted_lines)
+        except Exception as e:
+            print(f"Error formatting chat content: {e}")
+            return content
 
 class ModernMessagesScreen(QWidget):
     def __init__(self, parent=None):
@@ -452,19 +1550,12 @@ class ModernTopBar(QWidget):
             }
         """)
         
-        # Modern navigation buttons
-        home_button = self.create_nav_button("🏠 Home", 0)
-        chat_button = self.create_nav_button("💬 Chat", 1)
-        
         # Window control buttons
         minimize_btn = self.create_control_button("─", self.minimize_window)
         maximize_btn = self.create_control_button("□", self.maximize_window)
         close_btn = self.create_control_button("✕", self.close_window, "#e74c3c")
         
         layout.addWidget(title_label)
-        layout.addStretch(1)
-        layout.addWidget(home_button)
-        layout.addWidget(chat_button)
         layout.addStretch(1)
         layout.addWidget(minimize_btn)
         layout.addWidget(maximize_btn)
@@ -552,17 +1643,7 @@ class ModernMainWindow(QMainWindow):
         screen_width = desktop.screenGeometry().width()
         screen_height = desktop.screenGeometry().height()
         
-        # Create stacked widget for screens
-        self.stacked_widget = QStackedWidget(self)
-        
-        # Create modern screens
-        self.initial_screen = ModernInitialScreen()
-        self.message_screen = ModernMessagesScreen()
-        
-        self.stacked_widget.addWidget(self.initial_screen)
-        self.stacked_widget.addWidget(self.message_screen)
-        
-        # Set window properties
+        # Set window properties with pitch black background
         self.setGeometry(0, 0, screen_width, screen_height)
         self.setStyleSheet("""
             QMainWindow {
@@ -570,10 +1651,13 @@ class ModernMainWindow(QMainWindow):
             }
         """)
         
+        # Create integrated main screen (no stacked widget needed)
+        self.main_screen = ModernIntegratedScreen()
+        
         # Create modern top bar
-        self.top_bar = ModernTopBar(self, self.stacked_widget)
+        self.top_bar = ModernTopBar(self, None)  # No stacked widget needed
         self.setMenuWidget(self.top_bar)
-        self.setCentralWidget(self.stacked_widget)
+        self.setCentralWidget(self.main_screen)
 
 def ModernGraphicalUserInterface():
     app = QApplication(sys.argv)

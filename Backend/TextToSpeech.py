@@ -3,11 +3,23 @@ import random
 import asyncio
 import edge_tts
 import os
+import sys
 from dotenv import dotenv_values
+
+# Add the project root to the path to import GUI modules
+current_dir = os.getcwd()
+sys.path.append(current_dir)
 
 env_vars = dotenv_values(".env") 
 AssistantVoice = env_vars.get("AssistantVoice")
 
+# Global reference to the main interface for heartbeat control
+heartbeat_interface = None
+
+def set_heartbeat_interface(interface):
+    """Set the reference to the main interface for heartbeat control"""
+    global heartbeat_interface
+    heartbeat_interface = interface
 
 async def TextToAudioFile(text) -> None:
     file_path = r"Data\speech.mp3"
@@ -20,6 +32,13 @@ async def TextToAudioFile(text) -> None:
     
 
 def TTS(Text, func=lambda r=None: True):
+    # Start heartbeat animation
+    if heartbeat_interface:
+        try:
+            heartbeat_interface.start_heartbeat()
+        except Exception as e:
+            print(f"Error starting heartbeat: {e}")
+    
     while True:
         try:
             
@@ -39,12 +58,26 @@ def TTS(Text, func=lambda r=None: True):
                 if func() == False:
                     break
                 pygame.time.Clock().tick(30)  # Faster tick rate
+            
+            # Stop heartbeat animation when speech ends
+            if heartbeat_interface:
+                try:
+                    heartbeat_interface.stop_heartbeat()
+                except Exception as e:
+                    print(f"Error stopping heartbeat: {e}")
+            
             return True
         except Exception as e:
             print(f"Error in TTS: {e}")
             
         finally:
             try:
+                # Stop heartbeat animation in finally block as well
+                if heartbeat_interface:
+                    try:
+                        heartbeat_interface.stop_heartbeat()
+                    except Exception as e:
+                        print(f"Error stopping heartbeat in finally: {e}")
                 
                 func(False)
                 pygame.mixer.music.stop()

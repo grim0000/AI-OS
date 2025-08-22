@@ -72,11 +72,11 @@ def ChatBot(Query):
         messages.append({"role": "user", "content": Query})
 
         completion = client.chat.completions.create(
-            model="llama3-70b-8192",
-            messages=SystemChatbot + [{"role": "system", "content": RealTimeInformation()}] + messages[-4:],  # Keep last 4 messages for ultra fast response
-            max_tokens=256,  # Further reduced for ultra fast response
-            temperature=0.7,
-            top_p=1,
+            model="llama-3.1-8b-instant",
+            messages=SystemChatbot + [{"role": "system", "content": RealTimeInformation()}] + messages[-3:],
+            max_tokens=192,
+            temperature=0.6,
+            top_p=0.95,
             stream=True,
             stop=None
         )

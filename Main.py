@@ -8,11 +8,12 @@ SetMicrophoneStatus, TempDirectoryPath, AnswerModifier, QueryModifier)
 
 from Backend.Model import FirstLayerDMM
 from Backend.RealtimeSearchEngine import RealtimeSearchEngine
-from Backend.Automation import Automation
-from Backend.Automation import SystemAutomation
+from Backend.Automation import Automation, SystemAutomation, smart_automation, enhanced_automation
 from Backend.Chatbot import ChatBot
 from Backend.SpeechToText import SpeechRecognition
-from Backend.TextToSpeech import TextToSpeech
+from Backend.TextToSpeech import TextToSpeech, set_heartbeat_interface
+from Backend.InteractiveDrafting import handle_drafting_request, get_current_drafting_question
+from Backend.GmailIntegration import handle_gmail_request
 from dotenv import dotenv_values
 from asyncio import run
 from time import sleep
@@ -27,8 +28,8 @@ Assistantname = env_vars.get("AssistantName")
 DefaultMessage = f'''{Username} : Hello, I am {Assistantname}, How are you?
 {Assistantname} : Welcome {Username}. I am doing well.How can I help you?''' 
 
-subprocesses = []
-Functions = ["open", "close", "play", "system", "content", "google search", "youtube search", "clean up "] 
+# List of available functions for automation
+Functions = ["open", "close", "play", "system", "content", "google search", "youtube search", "clean up"] 
 
 
 def ShowDefaultChatIfNoChats():
@@ -90,6 +91,15 @@ def MainExecution():
     
     SetAssistantStatus("Listening...")
     Query = SpeechRecognition()
+    
+    # Check if speech recognition was interrupted
+    if Query is None:
+        return False
+    
+    # Check if mic was turned off during speech recognition
+    if GetMicrophoneStatus() == "False":
+        return False
+        
     ShowTextToScreen(f"{Username} : {Query}")
     SetAssistantStatus("Thinking...")
     Decision = FirstLayerDMM(Query)
@@ -115,6 +125,16 @@ def MainExecution():
         if " clean up " in queries:
             result = SystemAutomation(queries)
             print(result)
+            ShowTextToScreen(f"{Assistantname}: {result}")
+            SetAssistantStatus("Answering...")
+            TextToSpeech(result)
+            return True
+        
+        elif "smart_automation" in queries:
+            SetAssistantStatus("Executing...")
+            query = queries.replace("smart_automation", "").strip()
+            result = enhanced_automation(query)  # Use enhanced automation
+            print(f"🎯 Enhanced Automation Result: {result}")
             ShowTextToScreen(f"{Assistantname}: {result}")
             SetAssistantStatus("Answering...")
             TextToSpeech(result)
@@ -155,10 +175,33 @@ def MainExecution():
             if "general" in Queries:
                 SetAssistantStatus("Thinking...")
                 QueryFinal = Queries.replace("general", "")
-                Answer = ChatBot(QueryModifier(QueryFinal))
+                
+                # Check if this is a drafting request
+                drafting_response = handle_drafting_request(QueryModifier(QueryFinal))
+                if drafting_response:
+                    Answer = drafting_response
+                else:
+                    # Check if this is a Gmail request
+                    gmail_response = handle_gmail_request(QueryModifier(QueryFinal))
+                    if gmail_response:
+                        Answer = gmail_response
+                    else:
+                        Answer = ChatBot(QueryModifier(QueryFinal))
+                
                 ShowTextToScreen(f"{Assistantname} : {Answer}")
                 SetAssistantStatus("Answering...")
-                TextToSpeech(Answer)
+                
+                # Check if mic was turned off during processing
+                if GetMicrophoneStatus() == "False":
+                    return False
+                    
+                # Check for interruption during TTS
+                try:
+                    TextToSpeech(Answer)
+                except:
+                    # If TTS is interrupted, return False to stop processing
+                    return False
+                    
                 return True
             
             elif "realtime" in Queries:
@@ -167,7 +210,18 @@ def MainExecution():
                 Answer = RealtimeSearchEngine(QueryModifier(QueryFinal))
                 ShowTextToScreen(f"{Assistantname} : {Answer}")
                 SetAssistantStatus("Answering...")
-                TextToSpeech(Answer)
+                
+                # Check if mic was turned off during processing
+                if GetMicrophoneStatus() == "False":
+                    return False
+                    
+                # Check for interruption during TTS
+                try:
+                    TextToSpeech(Answer)
+                except:
+                    # If TTS is interrupted, return False to stop processing
+                    return False
+                    
                 return True
             elif "exit" in Queries:
                 QueryFinal = "Okay, Goodbye!"
@@ -187,8 +241,17 @@ def FirstThread():
         CurrentStatus = GetMicrophoneStatus()
         
         if CurrentStatus == "True":
-            MainExecution()
-            
+            # Check for interrupt during execution
+            try:
+                result = MainExecution()
+                # If MainExecution returns False, it was interrupted
+                if result == False:
+                    continue
+            except KeyboardInterrupt:
+                # Handle interruption
+                SetMicrophoneStatus("False")
+                SetAssistantStatus("Available...")
+                continue
         else:
             AIStatus = GetAssistantStatus()
             
