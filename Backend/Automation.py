@@ -32,6 +32,54 @@ GroqAPIKey = env_vars.get('GroqAPIKey')
 
 client = Groq(api_key=GroqAPIKey)
 
+def make_conversational_response(error_message: str, action: str = "task") -> str:
+    """
+    Convert technical error messages into conversational responses.
+    """
+    error_lower = error_message.lower()
+    
+    # Common error patterns and their conversational responses
+    error_patterns = {
+        "failed to open": "I couldn't open that for you",
+        "not found": "I couldn't find that on your system",
+        "permission denied": "I don't have permission to do that",
+        "access denied": "I'm not allowed to access that",
+        "file not found": "That file doesn't seem to exist",
+        "application not found": "That app isn't installed on your computer",
+        "network error": "There seems to be a network issue",
+        "connection failed": "I couldn't connect to that service",
+        "timeout": "That took too long and timed out",
+        "invalid": "That doesn't seem to be valid",
+        "error": "Something went wrong with that",
+        "exception": "I ran into an issue with that",
+        "failed": "I couldn't complete that",
+        "not available": "That's not available right now",
+        "not supported": "That's not supported on your system"
+    }
+    
+    # Check for specific error patterns
+    for pattern, response in error_patterns.items():
+        if pattern in error_lower:
+            # Add some variety to responses
+            variations = [
+                f"{response}. Maybe try something else?",
+                f"{response}. Is there something else I can help you with?",
+                f"{response}. Would you like to try a different approach?",
+                f"{response}. Let me know if you need help with something else!"
+            ]
+            return random.choice(variations)
+    
+    # Generic conversational responses for unknown errors
+    generic_responses = [
+        "I'm having trouble with that right now. Can I help you with something else?",
+        "That didn't work as expected. Is there another way I can assist you?",
+        "I couldn't get that to work. Maybe we could try something different?",
+        "Something went wrong there. What else can I help you with today?",
+        "I'm not able to do that at the moment. Is there anything else you'd like me to try?"
+    ]
+    
+    return random.choice(generic_responses)
+
 professional_responses = [
     "Your Satisfaction is my top priority; feel free to reach out if there's anything else I can help you with.",
     "I'm at your service for any additional questions or support you may need-don't hesitate to reach out."

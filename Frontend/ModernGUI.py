@@ -1809,10 +1809,86 @@ class ModernInitialScreen(QWidget):
         self.last_chat_content = ""
         self.update_mic_button()
         
+        # Text input area (ChatGPT style)
+        text_input_container = QWidget()
+        text_input_container.setFixedHeight(120)
+        text_input_container.setStyleSheet("""
+            QWidget {
+                background: transparent;
+                margin: 20px;
+            }
+        """)
+        
+        text_input_layout = QVBoxLayout(text_input_container)
+        text_input_layout.setContentsMargins(50, 10, 50, 10)
+        text_input_layout.setSpacing(10)
+        
+        # Text input field
+        self.text_input = QLineEdit()
+        self.text_input.setPlaceholderText("Type your message here... (Press Enter to send)")
+        self.text_input.setStyleSheet("""
+            QLineEdit {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #313244, stop:1 #1e1e2e);
+                border: 2px solid #89b4fa;
+                border-radius: 15px;
+                color: #cdd6f4;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                padding: 15px 20px;
+                min-height: 50px;
+            }
+            QLineEdit:focus {
+                border: 2px solid #b4befe;
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #45475a, stop:1 #313244);
+            }
+            QLineEdit::placeholder {
+                color: #6c7086;
+                font-style: italic;
+            }
+        """)
+        self.text_input.returnPressed.connect(self.send_text_message)
+        
+        # Send button
+        self.send_button = QPushButton("📤 Send")
+        self.send_button.setFixedSize(100, 50)
+        self.send_button.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #a6e3a1, stop:1 #94e2d5);
+                border: 2px solid #a6e3a1;
+                border-radius: 15px;
+                color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 16px;
+                font-weight: bold;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #b6f3b1, stop:1 #a4f2e5);
+                border: 2px solid #b6f3b1;
+            }
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #94e2d5, stop:1 #a6e3a1);
+            }
+        """)
+        self.send_button.clicked.connect(self.send_text_message)
+        
+        # Input row with text field and send button
+        input_row = QHBoxLayout()
+        input_row.addWidget(self.text_input)
+        input_row.addWidget(self.send_button)
+        input_row.setSpacing(15)
+        
+        text_input_layout.addLayout(input_row)
+        
         # Layout setup for main interface
         main_interface_layout.addStretch(1)
         main_interface_layout.addWidget(logo_label, alignment=Qt.AlignCenter)
         main_interface_layout.addWidget(self.status_label, alignment=Qt.AlignCenter)
+        main_interface_layout.addWidget(text_input_container, alignment=Qt.AlignCenter)
         main_interface_layout.addWidget(self.mic_button, alignment=Qt.AlignCenter)
         main_interface_layout.addStretch(1)
         
@@ -1914,6 +1990,81 @@ class ModernInitialScreen(QWidget):
             
         except Exception as e:
             print(f"Error clearing chat: {e}")
+    
+    def send_text_message(self):
+        """Handle text message sending from the input field"""
+        try:
+            # Get the text from input field
+            message = self.text_input.text().strip()
+            
+            if not message:
+                return  # Don't send empty messages
+            
+            # Clear the input field
+            self.text_input.clear()
+            
+            # Update status
+            self.status_label.setText("Processing text message...")
+            
+            # Write the user message to the responses file to show in chat
+            current_content = ""
+            try:
+                with open(TempDirectoryPath('Responses.data'), "r", encoding='utf-8') as file:
+                    current_content = file.read()
+            except:
+                pass
+            
+            # Add user message to chat
+            user_message = f"{env_var.get('Username', 'User')} : {message}"
+            updated_content = current_content + "\n" + user_message if current_content else user_message
+            
+            with open(TempDirectoryPath('Responses.data'), "w", encoding='utf-8') as file:
+                file.write(updated_content)
+            
+            # Process the message using the main execution system
+            self.process_text_message(message)
+            
+        except Exception as e:
+            print(f"Error sending text message: {e}")
+            self.status_label.setText("Error processing message")
+    
+    def process_text_message(self, message):
+        """Process text message using the main execution system"""
+        try:
+            # Import the main execution function
+            from Main import MainExecution
+            
+            # Create a thread to process the message without blocking UI
+            import threading
+            
+            def process_in_thread():
+                try:
+                    # Set status
+                    SetAssistantStatus("Processing...")
+                    
+                    # Call the main execution function with text input
+                    print(f"📝 Processing text message: {message}")
+                    
+                    # Use the modified MainExecution function
+                    result = MainExecution(use_text_input=True, text_query=message)
+                    
+                    # Update status
+                    if result:
+                        SetAssistantStatus("Ready")
+                    else:
+                        SetAssistantStatus("Error")
+                    
+                except Exception as e:
+                    print(f"Error processing text message in thread: {e}")
+                    SetAssistantStatus("Error")
+            
+            # Start the processing thread
+            thread = threading.Thread(target=process_in_thread, daemon=True)
+            thread.start()
+            
+        except Exception as e:
+            print(f"Error in process_text_message: {e}")
+            self.status_label.setText("Error processing message")
             
     def update_status(self):
         try:
@@ -2018,7 +2169,7 @@ class ModernTopBar(QWidget):
         layout.setSpacing(20)
         
         # Enhanced title with larger font
-        title_label = QLabel(f"🤖  AI Assistant")
+        title_label = QLabel(f"🤖  OSAIMA")
         title_label.setStyleSheet("""
             QLabel {
                 color: #ffffff;

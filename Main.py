@@ -83,22 +83,28 @@ def IntialExecution():
     
 IntialExecution()
 
-def MainExecution():
+def MainExecution(use_text_input=False, text_query=""):
     
     TaskExecution = False
     ImageExecution = False
     ImageGenerationQuery = ""
     
-    SetAssistantStatus("Listening...")
-    Query = SpeechRecognition()
-    
-    # Check if speech recognition was interrupted
-    if Query is None:
-        return False
-    
-    # Check if mic was turned off during speech recognition
-    if GetMicrophoneStatus() == "False":
-        return False
+    if use_text_input:
+        # Use text input instead of speech recognition
+        Query = text_query
+        SetAssistantStatus("Processing text...")
+    else:
+        # Use speech recognition
+        SetAssistantStatus("Listening...")
+        Query = SpeechRecognition()
+        
+        # Check if speech recognition was interrupted
+        if Query is None:
+            return False
+        
+        # Check if mic was turned off during speech recognition
+        if GetMicrophoneStatus() == "False":
+            return False
         
     ShowTextToScreen(f"{Username} : {Query}")
     SetAssistantStatus("Thinking...")
@@ -127,7 +133,10 @@ def MainExecution():
             print(result)
             ShowTextToScreen(f"{Assistantname}: {result}")
             SetAssistantStatus("Answering...")
-            TextToSpeech(result)
+            if not use_text_input:
+                TextToSpeech(result)
+            else:
+                SetAssistantStatus("Ready")
             return True
         
         elif "smart_automation" in queries:
@@ -137,7 +146,10 @@ def MainExecution():
             print(f"🎯 Enhanced Automation Result: {result}")
             ShowTextToScreen(f"{Assistantname}: {result}")
             SetAssistantStatus("Answering...")
-            TextToSpeech(result)
+            if not use_text_input:
+                TextToSpeech(result)
+            else:
+                SetAssistantStatus("Ready")
             return True
         
     for queries in Decision:
@@ -166,7 +178,10 @@ def MainExecution():
         Answer = RealtimeSearchEngine(QueryModifier(Mearged_query))
         ShowTextToScreen(f"{Username} : {Answer}")
         SetAssistantStatus("Answering")
-        TextToSpeech(Answer)
+        if not use_text_input:
+            TextToSpeech(Answer)
+        else:
+            SetAssistantStatus("Ready")
         return True
     
     else:
@@ -191,16 +206,21 @@ def MainExecution():
                 ShowTextToScreen(f"{Assistantname} : {Answer}")
                 SetAssistantStatus("Answering...")
                 
-                # Check if mic was turned off during processing
-                if GetMicrophoneStatus() == "False":
-                    return False
-                    
-                # Check for interruption during TTS
-                try:
-                    TextToSpeech(Answer)
-                except:
-                    # If TTS is interrupted, return False to stop processing
-                    return False
+                # For text input, skip TTS
+                if not use_text_input:
+                    # Check if mic was turned off during processing
+                    if GetMicrophoneStatus() == "False":
+                        return False
+                        
+                    # Check for interruption during TTS
+                    try:
+                        TextToSpeech(Answer)
+                    except:
+                        # If TTS is interrupted, return False to stop processing
+                        return False
+                else:
+                    # For text input, just update status
+                    SetAssistantStatus("Ready")
                     
                 return True
             
@@ -211,16 +231,21 @@ def MainExecution():
                 ShowTextToScreen(f"{Assistantname} : {Answer}")
                 SetAssistantStatus("Answering...")
                 
-                # Check if mic was turned off during processing
-                if GetMicrophoneStatus() == "False":
-                    return False
-                    
-                # Check for interruption during TTS
-                try:
-                    TextToSpeech(Answer)
-                except:
-                    # If TTS is interrupted, return False to stop processing
-                    return False
+                # For text input, skip TTS
+                if not use_text_input:
+                    # Check if mic was turned off during processing
+                    if GetMicrophoneStatus() == "False":
+                        return False
+                        
+                    # Check for interruption during TTS
+                    try:
+                        TextToSpeech(Answer)
+                    except:
+                        # If TTS is interrupted, return False to stop processing
+                        return False
+                else:
+                    # For text input, just update status
+                    SetAssistantStatus("Ready")
                     
                 return True
             elif "exit" in Queries:
@@ -228,7 +253,8 @@ def MainExecution():
                 Answer = ChatBot(QueryModifier(QueryFinal))
                 ShowTextToScreen(f"{Assistantname} : {Answer}")
                 SetAssistantStatus("Answering...")
-                TextToSpeech(Answer)
+                if not use_text_input:
+                    TextToSpeech(Answer)
                 SetAssistantStatus("Answering...")
                 os._exit(1)
                 
