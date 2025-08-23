@@ -1,0 +1,16 @@
+{
+  "style_preferences": {
+    "slack_teammate": {
+      "tone": {
+        "formal": 0.2,
+        "casual": 0.8
+      },
+      "length": {
+        "concise": 0.09999999999999998,
+        "detailed": 0.8999999999999999
+      }
+    }
+  },
+  "context_patterns": {},
+  "feedback_history": []
+}
