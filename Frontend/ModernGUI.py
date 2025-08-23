@@ -8,6 +8,7 @@ from PyQt5.QtCore import Qt, QSize, QTimer, QPropertyAnimation, QEasingCurve, QR
 from dotenv import dotenv_values
 import sys
 import os
+import time
 
 env_var = dotenv_values(".env")
 Assistantname = env_var.get("AssistantName", "AI")
@@ -484,7 +485,7 @@ class ModernChatSection(QWidget):
             print(f"Error clearing chat: {e}")
     
     def populate_input_devices(self):
-        """Populate input device dropdown with available microphones"""
+        """Populate input device dropdown with currently available microphones"""
         try:
             import pyaudio
             p = pyaudio.PyAudio()
@@ -492,11 +493,36 @@ class ModernChatSection(QWidget):
             self.input_device_combo.clear()
             self.input_device_combo.addItem("Default Microphone")
             
+            # Get default input device
+            try:
+                default_input = p.get_default_input_device_info()
+                if default_input:
+                    self.input_device_combo.addItem(f"🎤 {default_input['name']} (Default)")
+            except:
+                pass
+            
+            # Get currently available input devices
+            available_devices = []
             for i in range(p.get_device_count()):
-                device_info = p.get_device_info_by_index(i)
-                if device_info['maxInputChannels'] > 0:  # Input device
-                    device_name = device_info['name']
-                    self.input_device_combo.addItem(f"{device_name}")
+                try:
+                    device_info = p.get_device_info_by_index(i)
+                    if device_info['maxInputChannels'] > 0:  # Input device
+                        # Check if device is currently available
+                        if device_info['hostApi'] == 0:  # Windows DirectSound
+                            device_name = device_info['name']
+                            # Filter out virtual devices and duplicates
+                            if not any(keyword in device_name.lower() for keyword in 
+                                      ['virtual', 'cable', 'loopback', 'stereo mix']):
+                                available_devices.append(device_name)
+                except:
+                    continue
+            
+            # Add unique available devices
+            seen_devices = set()
+            for device_name in available_devices:
+                if device_name not in seen_devices:
+                    self.input_device_combo.addItem(f"🎤 {device_name}")
+                    seen_devices.add(device_name)
             
             p.terminate()
             
@@ -505,7 +531,7 @@ class ModernChatSection(QWidget):
             self.input_device_combo.addItem("Default Microphone")
     
     def populate_output_devices(self):
-        """Populate output device dropdown with available speakers"""
+        """Populate output device dropdown with currently available speakers"""
         try:
             import pyaudio
             p = pyaudio.PyAudio()
@@ -513,11 +539,36 @@ class ModernChatSection(QWidget):
             self.output_device_combo.clear()
             self.output_device_combo.addItem("Default Speakers")
             
+            # Get default output device
+            try:
+                default_output = p.get_default_output_device_info()
+                if default_output:
+                    self.output_device_combo.addItem(f"🔊 {default_output['name']} (Default)")
+            except:
+                pass
+            
+            # Get currently available output devices
+            available_devices = []
             for i in range(p.get_device_count()):
-                device_info = p.get_device_info_by_index(i)
-                if device_info['maxOutputChannels'] > 0:  # Output device
-                    device_name = device_info['name']
-                    self.output_device_combo.addItem(f"{device_name}")
+                try:
+                    device_info = p.get_device_info_by_index(i)
+                    if device_info['maxOutputChannels'] > 0:  # Output device
+                        # Check if device is currently available
+                        if device_info['hostApi'] == 0:  # Windows DirectSound
+                            device_name = device_info['name']
+                            # Filter out virtual devices and duplicates
+                            if not any(keyword in device_name.lower() for keyword in 
+                                      ['virtual', 'cable', 'loopback', 'stereo mix']):
+                                available_devices.append(device_name)
+                except:
+                    continue
+            
+            # Add unique available devices
+            seen_devices = set()
+            for device_name in available_devices:
+                if device_name not in seen_devices:
+                    self.output_device_combo.addItem(f"🔊 {device_name}")
+                    seen_devices.add(device_name)
             
             p.terminate()
             
@@ -528,6 +579,8 @@ class ModernChatSection(QWidget):
 class ModernIntegratedScreen(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.heartbeat_animation = None
+        self.is_responding = False
         self.initUI()
         
     def initUI(self):
@@ -547,38 +600,38 @@ class ModernIntegratedScreen(QWidget):
             }
         """)
         
-        # Left side - Chat Panel (35% width)
+        # Left side - Chat Panel (40% width) - Enhanced design
         chat_panel = QWidget()
-        chat_panel.setFixedWidth(int(screen_width * 0.35))
+        chat_panel.setFixedWidth(int(screen_width * 0.40))
         chat_panel.setStyleSheet("""
             QWidget {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #1e1e2e, stop:1 #181825);
-                border-right: 3px solid #89b4fa;
+                    stop:0 #1a1a2e, stop:1 #16213e);
+                border-right: 3px solid #0ea5e9;
             }
         """)
         
         chat_layout = QVBoxLayout(chat_panel)
-        chat_layout.setContentsMargins(15, 15, 15, 15)
-        chat_layout.setSpacing(15)
+        chat_layout.setContentsMargins(20, 20, 20, 20)
+        chat_layout.setSpacing(20)
         
-        # Chat title with better colors
+        # Enhanced chat title with larger font
         chat_title = QLabel("💬 Chat History")
         chat_title.setStyleSheet("""
             QLabel {
-                color: #89b4fa;
+                color: #0ea5e9;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 20px;
+                font-size: 24px;
                 font-weight: bold;
-                padding: 15px;
-                background: rgba(137, 180, 250, 0.1);
-                border-radius: 10px;
-                border: 2px solid rgba(137, 180, 250, 0.3);
+                padding: 20px;
+                background: rgba(14, 165, 233, 0.15);
+                border-radius: 15px;
+                border: 2px solid rgba(14, 165, 233, 0.4);
             }
         """)
         chat_layout.addWidget(chat_title)
         
-        # Chat text area with better colors and larger fonts
+        # Enhanced chat text area with larger fonts and better styling
         self.chat_text_edit = QTextEdit()
         self.chat_text_edit.setReadOnly(True)
         self.chat_text_edit.setTextInteractionFlags(Qt.NoTextInteraction)
@@ -587,42 +640,85 @@ class ModernIntegratedScreen(QWidget):
         self.chat_text_edit.setStyleSheet("""
             QTextEdit {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #313244, stop:1 #1e1e2e);
-                color: #cdd6f4;
+                    stop:0 #1e293b, stop:1 #0f172a);
+                color: #e2e8f0;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 16px;
-                border: 2px solid #89b4fa;
-                border-radius: 15px;
-                padding: 15px;
-                selection-background-color: #89b4fa;
+                font-size: 18px;
+                border: 2px solid #0ea5e9;
+                border-radius: 20px;
+                padding: 20px;
+                selection-background-color: #0ea5e9;
             }
             QTextEdit QScrollBar:vertical {
-                background: #1e1e2e;
-                width: 12px;
-                border-radius: 6px;
+                background: #0f172a;
+                width: 14px;
+                border-radius: 7px;
             }
             QTextEdit QScrollBar::handle:vertical {
-                background: #89b4fa;
-                border-radius: 6px;
-                min-height: 20px;
+                background: #0ea5e9;
+                border-radius: 7px;
+                min-height: 30px;
             }
             QTextEdit QScrollBar::handle:vertical:hover {
-                background: #b4befe;
+                background: #38bdf8;
             }
         """)
         chat_layout.addWidget(self.chat_text_edit)
         
-        # Device selection section
+        # Enhanced device selection section with refresh button
         device_layout = QVBoxLayout()
-        device_layout.setSpacing(10)
+        device_layout.setSpacing(15)
         
-        # Input device dropdown
+        # Device section header with refresh button
+        device_header_layout = QHBoxLayout()
+        
+        device_header_label = QLabel("🎛️ Audio Devices")
+        device_header_label.setStyleSheet("""
+            QLabel {
+                color: #0ea5e9;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 18px;
+                font-weight: bold;
+            }
+        """)
+        device_header_layout.addWidget(device_header_label)
+        
+        # Refresh devices button
+        self.refresh_devices_btn = QPushButton("🔄 Refresh")
+        self.refresh_devices_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #6366f1, stop:1 #4f46e5);
+                border: 2px solid #6366f1;
+                border-radius: 8px;
+                color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+                padding: 8px 12px;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #818cf8, stop:1 #6366f1);
+                border: 2px solid #818cf8;}
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #4f46e5, stop:1 #3730a3);}
+        """)
+        self.refresh_devices_btn.clicked.connect(self.refresh_devices)
+        device_header_layout.addWidget(self.refresh_devices_btn)
+        device_header_layout.addStretch(1)
+        
+        device_layout.addLayout(device_header_layout)
+        
+        # Input device dropdown with larger font
         input_label = QLabel("🎤 Input Device:")
         input_label.setStyleSheet("""
             QLabel {
-                color: #89b4fa;
+                color: #0ea5e9;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: bold;
             }
         """)
@@ -632,44 +728,47 @@ class ModernIntegratedScreen(QWidget):
         self.input_device_combo.setStyleSheet("""
             QComboBox {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #313244, stop:1 #1e1e2e);
-                border: 2px solid #89b4fa;
-                border-radius: 8px;
-                color: #cdd6f4;
+                    stop:0 #1e293b, stop:1 #0f172a);
+                border: 2px solid #0ea5e9;
+                border-radius: 12px;
+                color: #e2e8f0;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 14px;
-                padding: 8px 12px;
-                min-width: 200px;
+                font-size: 16px;
+                padding: 12px 16px;
+                min-width: 250px;
             }
             QComboBox::drop-down {
                 border: none;
-                width: 20px;
+                width: 25px;
             }
             QComboBox::down-arrow {
                 image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 5px solid #89b4fa;
-                margin-right: 5px;
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                border-top: 6px solid #0ea5e9;
+                margin-right: 8px;
             }
             QComboBox QAbstractItemView {
-                background: #1e1e2e;
-                border: 2px solid #89b4fa;
-                border-radius: 8px;
-                color: #cdd6f4;
-                selection-background-color: #89b4fa;
+                background: #0f172a;
+                border: 2px solid #0ea5e9;
+                border-radius: 12px;
+                color: #e2e8f0;
+                selection-background-color: #0ea5e9;
+                font-size: 16px;
             }
+            QComboBox:hover {
+                border: 2px solid #38bdf8;}
         """)
         self.populate_input_devices()
         device_layout.addWidget(self.input_device_combo)
         
-        # Output device dropdown
+        # Output device dropdown with larger font
         output_label = QLabel("🔊 Output Device:")
         output_label.setStyleSheet("""
             QLabel {
-                color: #89b4fa;
+                color: #0ea5e9;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 14px;
+                font-size: 16px;
                 font-weight: bold;
             }
         """)
@@ -679,40 +778,43 @@ class ModernIntegratedScreen(QWidget):
         self.output_device_combo.setStyleSheet("""
             QComboBox {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #313244, stop:1 #1e1e2e);
-                border: 2px solid #89b4fa;
-                border-radius: 8px;
-                color: #cdd6f4;
+                    stop:0 #1e293b, stop:1 #0f172a);
+                border: 2px solid #0ea5e9;
+                border-radius: 12px;
+                color: #e2e8f0;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 14px;
-                padding: 8px 12px;
-                min-width: 200px;
+                font-size: 16px;
+                padding: 12px 16px;
+                min-width: 250px;
             }
             QComboBox::drop-down {
                 border: none;
-                width: 20px;
+                width: 25px;
             }
             QComboBox::down-arrow {
                 image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 5px solid #89b4fa;
-                margin-right: 5px;
+                border-left: 6px solid transparent;
+                border-right: 6px solid transparent;
+                border-top: 6px solid #0ea5e9;
+                margin-right: 8px;
             }
             QComboBox QAbstractItemView {
-                background: #1e1e2e;
-                border: 2px solid #89b4fa;
-                border-radius: 8px;
-                color: #cdd6f4;
-                selection-background-color: #89b4fa;
+                background: #0f172a;
+                border: 2px solid #0ea5e9;
+                border-radius: 12px;
+                color: #e2e8f0;
+                selection-background-color: #0ea5e9;
+                font-size: 16px;
             }
+            QComboBox:hover {
+                border: 2px solid #38bdf8;}
         """)
         self.populate_output_devices()
         device_layout.addWidget(self.output_device_combo)
         
         chat_layout.addLayout(device_layout)
         
-        # Right side - Main Interface (65% width)
+        # Right side - Main Interface (60% width)
         main_interface = QWidget()
         main_interface.setStyleSheet("""
             QWidget {
@@ -723,7 +825,7 @@ class ModernIntegratedScreen(QWidget):
         main_interface_layout.setContentsMargins(0, 0, 0, 0)
         main_interface_layout.setSpacing(0)
         
-        # Create animated background with GIF
+        # Create animated background with GIF and heartbeat effect
         self.background_label = QLabel()
         self.background_label.setAlignment(Qt.AlignCenter)
         self.background_label.setStyleSheet("background: transparent;")
@@ -732,120 +834,120 @@ class ModernIntegratedScreen(QWidget):
         try:
             gif_path = GraphicsDirectoryPath("7ZN3.gif")
             if os.path.exists(gif_path):
-                movie = QMovie(gif_path)
-                movie.setScaledSize(QSize(400, 400))  # Restored original size
-                self.background_label.setMovie(movie)
-                movie.start()
+                self.movie = QMovie(gif_path)
+                self.movie.setScaledSize(QSize(450, 450))  # Larger size
+                self.background_label.setMovie(self.movie)
+                self.movie.start()
         except Exception as e:
             print(f"Error loading background GIF: {e}")
         
-        # Status label with better colors
+        # Enhanced status label with larger font
         self.status_label = QLabel("Ready to assist you...")
         self.status_label.setAlignment(Qt.AlignCenter)
         self.status_label.setStyleSheet("""
             QLabel {
-                color: #89b4fa;
+                color: #0ea5e9;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 18px;
+                font-size: 22px;
                 font-weight: 300;
-                margin: 20px;
-                padding: 10px;
-                background: rgba(137, 180, 250, 0.1);
-                border-radius: 10px;
-                border: 1px solid rgba(137, 180, 250, 0.3);
+                margin: 25px;
+                padding: 15px;
+                background: rgba(14, 165, 233, 0.15);
+                border-radius: 15px;
+                border: 1px solid rgba(14, 165, 233, 0.4);
             }
         """)
         
-        # Microphone button
+        # Enhanced microphone button with animations
         self.mic_button = QPushButton()
-        self.mic_button.setFixedSize(120, 120)
+        self.mic_button.setFixedSize(140, 140)  # Larger button
         self.mic_button.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #89b4fa, stop:1 #74c7ec);
+                    stop:0 #0ea5e9, stop:1 #0284c7);
                 border: none;
-                border-radius: 60px;
+                border-radius: 70px;
                 color: white;
-                font-size: 24px;
+                font-size: 32px;
                 font-weight: bold;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #b4befe, stop:1 #89b4fa);
+                    stop:0 #38bdf8, stop:1 #0ea5e9);
             }
             QPushButton:pressed {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #74c7ec, stop:1 #89b4fa);
+                    stop:0 #0284c7, stop:1 #0ea5e9);
             }
         """)
         self.mic_button.setText("🎤")
         self.mic_button.clicked.connect(self.toggle_mic)
         
-        # Add drop shadow effect
+        # Enhanced drop shadow effect
         shadow = QGraphicsDropShadowEffect()
-        shadow.setBlurRadius(20)
-        shadow.setColor(QColor(0, 0, 0, 80))
-        shadow.setOffset(0, 4)
+        shadow.setBlurRadius(30)
+        shadow.setColor(QColor(14, 165, 233, 100))
+        shadow.setOffset(0, 8)
         self.mic_button.setGraphicsEffect(shadow)
         
         self.mic_active = False
         self.update_mic_button()
         
-        # Control buttons row (below GIF)
+        # Enhanced control buttons row with animations
         button_layout = QHBoxLayout()
-        button_layout.setSpacing(20)
+        button_layout.setSpacing(25)
         button_layout.setAlignment(Qt.AlignCenter)
         
-        # Reset button with better colors
+        # Enhanced reset button with animations
         self.reset_button = QPushButton("🔄 Reset")
         self.reset_button.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #f38ba8, stop:1 #eba0ac);
-                border: 2px solid #f38ba8;
-                border-radius: 10px;
+                    stop:0 #ef4444, stop:1 #dc2626);
+                border: 2px solid #ef4444;
+                border-radius: 15px;
                 color: white;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: bold;
-                padding: 12px 20px;
-                min-width: 100px;
+                padding: 15px 25px;
+                min-width: 120px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #f5c2e7, stop:1 #f38ba8);
-                border: 2px solid #f5c2e7;
+                    stop:0 #f87171, stop:1 #ef4444);
+                border: 2px solid #f87171;
             }
             QPushButton:pressed {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #eba0ac, stop:1 #f38ba8);
+                    stop:0 #dc2626, stop:1 #b91c1c);
             }
         """)
         self.reset_button.clicked.connect(self.reset_assistant)
         
-        # Clear chat button with better colors
+        # Enhanced clear chat button with animations
         self.clear_chat_button = QPushButton("🗑️ Clear")
         self.clear_chat_button.setStyleSheet("""
             QPushButton {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #fab387, stop:1 #f9e2af);
-                border: 2px solid #fab387;
-                border-radius: 10px;
+                    stop:0 #f59e0b, stop:1 #d97706);
+                border: 2px solid #f59e0b;
+                border-radius: 15px;
                 color: white;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 16px;
+                font-size: 18px;
                 font-weight: bold;
-                padding: 12px 20px;
-                min-width: 100px;
+                padding: 15px 25px;
+                min-width: 120px;
             }
             QPushButton:hover {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #fef3c7, stop:1 #fab387);
-                border: 2px solid #fef3c7;
+                    stop:0 #fbbf24, stop:1 #f59e0b);
+                border: 2px solid #fbbf24;
             }
             QPushButton:pressed {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #f9e2af, stop:1 #fab387);
+                    stop:0 #d97706, stop:1 #b45309);
             }
         """)
         self.clear_chat_button.clicked.connect(self.clear_chat)
@@ -876,8 +978,252 @@ class ModernIntegratedScreen(QWidget):
         self.timer.timeout.connect(self.loadMessage)
         self.timer.start(25)  # Ultra fast updates
         
-        self.last_processed_message = ""
+        # Timer for checking AI response status
+        self.response_timer = QTimer(self)
+        self.response_timer.timeout.connect(self.check_ai_response)
+        self.response_timer.start(100)  # Check every 100ms
         
+        # Initialize assistant state
+        self.initialize_assistant_state()
+        
+        self.last_processed_message = ""
+    
+    def initialize_assistant_state(self):
+        """Initialize the assistant to proper listening state"""
+        try:
+            # Set initial microphone state
+            self.mic_active = True
+            SetMicrophoneStatus("True")
+            SetAssistantStatus("Listening...")
+            
+            # Initialize response detection state
+            self.is_responding = False
+            self.last_mp3_time = None
+            self.last_mp3_size = None
+            
+            # Update UI to show listening state
+            self.status_label.setText("🎧 Listening...")
+            self.status_label.setStyleSheet("""
+                QLabel {
+                    color: #0ea5e9;
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    font-size: 22px;
+                    font-weight: 300;
+                    margin: 25px;
+                    padding: 15px;
+                    background: rgba(14, 165, 233, 0.15);
+                    border-radius: 15px;
+                    border: 1px solid rgba(14, 165, 233, 0.4);
+                }
+            """)
+            
+            # Update microphone button
+            self.mic_button.setText("🎤")
+            self.update_mic_button()
+            
+            # Clear any existing status files and ensure listening state
+            with open(TempDirectoryPath('Status.data'), "w", encoding='utf-8') as file:
+                file.write("Listening...")
+            
+            # Stop any existing heartbeat effect
+            if hasattr(self, 'heartbeat_animation') and self.heartbeat_animation:
+                self.heartbeat_animation.stop()
+            
+            print("🎧 Assistant initialized to listening state")
+            
+        except Exception as e:
+            print(f"Error initializing assistant state: {e}")
+        
+    def check_ai_response(self):
+        """Simplified AI response detection - only basic MP3 monitoring"""
+        try:
+            # Skip detection for first few seconds after startup
+            if not hasattr(self, 'startup_time'):
+                self.startup_time = time.time()
+            
+            # Don't detect AI responses for first 5 seconds after startup
+            if time.time() - self.startup_time < 5:
+                return
+            
+            # Only check MP3 file modifications (simplified approach)
+            mp3_path = os.path.join(os.getcwd(), "Data", "speech.mp3")
+            if os.path.exists(mp3_path):
+                current_time = os.path.getmtime(mp3_path)
+                current_size = os.path.getsize(mp3_path)
+                
+                if not hasattr(self, 'last_mp3_time'):
+                    self.last_mp3_time = current_time
+                if not hasattr(self, 'last_mp3_size'):
+                    self.last_mp3_size = current_size
+                
+                # Only trigger if file is being actively modified and we're listening
+                if ((current_time != self.last_mp3_time or current_size != self.last_mp3_size) 
+                    and self.mic_active and not self.is_responding):
+                    self.start_heartbeat_effect()
+                    self.is_responding = True
+                    
+                self.last_mp3_time = current_time
+                self.last_mp3_size = current_size
+                
+        except Exception as e:
+            pass
+    
+    def start_heartbeat_effect(self):
+        """Start the heartbeat animation for the GIF"""
+        # Don't start heartbeat if we're not actually listening
+        if not self.mic_active:
+            return
+            
+        if not hasattr(self, 'heartbeat_animation') or not self.heartbeat_animation:
+            # Create a more sophisticated heartbeat animation
+            self.heartbeat_animation = QPropertyAnimation(self.background_label, b"geometry")
+            self.heartbeat_animation.setDuration(800)  # 800ms for one heartbeat cycle
+            self.heartbeat_animation.setLoopCount(-1)  # Infinite loop
+            
+            # Get current geometry
+            current_geometry = self.background_label.geometry()
+            
+            # Create a more realistic heartbeat effect (double beat)
+            # First beat: scale up to 115%
+            first_beat_width = int(current_geometry.width() * 1.15)
+            first_beat_height = int(current_geometry.height() * 1.15)
+            x_offset_1 = (first_beat_width - current_geometry.width()) // 2
+            y_offset_1 = (first_beat_height - current_geometry.height()) // 2
+            
+            first_beat_geometry = QRect(
+                current_geometry.x() - x_offset_1,
+                current_geometry.y() - y_offset_1,
+                first_beat_width,
+                first_beat_height
+            )
+            
+            # Second beat: scale up to 120%
+            second_beat_width = int(current_geometry.width() * 1.20)
+            second_beat_height = int(current_geometry.height() * 1.20)
+            x_offset_2 = (second_beat_width - current_geometry.width()) // 2
+            y_offset_2 = (second_beat_height - current_geometry.height()) // 2
+            
+            second_beat_geometry = QRect(
+                current_geometry.x() - x_offset_2,
+                current_geometry.y() - y_offset_2,
+                second_beat_width,
+                second_beat_height
+            )
+            
+            # Create keyframe animation for realistic heartbeat
+            self.heartbeat_animation.setStartValue(current_geometry)
+            self.heartbeat_animation.setKeyValueAt(0.3, first_beat_geometry)  # First beat
+            self.heartbeat_animation.setKeyValueAt(0.5, current_geometry)     # Return to normal
+            self.heartbeat_animation.setKeyValueAt(0.7, second_beat_geometry) # Second beat
+            self.heartbeat_animation.setEndValue(current_geometry)           # Return to normal
+            
+            # Use a more natural easing curve
+            self.heartbeat_animation.setEasingCurve(QEasingCurve.OutBounce)
+            self.heartbeat_animation.start()
+            
+            # Add pulsing glow effect to the status label
+            self.status_label.setText("🤖 AI is responding...")
+            self.status_label.setStyleSheet("""
+                QLabel {
+                    color: #10b981;
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    font-size: 22px;
+                    font-weight: 300;
+                    margin: 25px;
+                    padding: 15px;
+                    background: rgba(16, 185, 129, 0.2);
+                    border-radius: 15px;
+                    border: 2px solid rgba(16, 185, 129, 0.6);
+                    /* Pulsing effect handled by PyQt5 animations */
+                }
+            """)
+            
+            # Add pulsing effect to microphone button
+            if hasattr(self, 'mic_button'):
+                self.mic_button.setStyleSheet("""
+                    QPushButton {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #10b981, stop:1 #059669);
+                        border: none;
+                        border-radius: 70px;
+                        color: white;
+                        font-size: 32px;
+                        font-weight: bold;
+                        /* Pulsing effect handled by PyQt5 animations */
+                    }
+                    QPushButton:hover {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #34d399, stop:1 #10b981);}
+                    QPushButton:pressed {
+                        background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                            stop:0 #059669, stop:1 #047857);}
+                """)
+    
+    def stop_heartbeat_effect(self):
+        """Stop the heartbeat animation and reset all effects"""
+        if self.heartbeat_animation:
+            self.heartbeat_animation.stop()
+            self.heartbeat_animation = None
+            
+            # Reset GIF to original size
+            if hasattr(self, 'movie'):
+                self.background_label.setMovie(self.movie)
+            
+            # Update status
+            self.status_label.setText("Ready to assist you...")
+            self.status_label.setStyleSheet("""
+                QLabel {
+                    color: #0ea5e9;
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    font-size: 22px;
+                    font-weight: 300;
+                    margin: 25px;
+                    padding: 15px;
+                    background: rgba(14, 165, 233, 0.15);
+                    border-radius: 15px;
+                    border: 1px solid rgba(14, 165, 233, 0.4);
+                }
+            """)
+            
+            # Reset microphone button to normal state
+            if hasattr(self, 'mic_button'):
+                if self.mic_active:
+                    self.mic_button.setStyleSheet("""
+                        QPushButton {
+                            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #10b981, stop:1 #059669);
+                            border: none;
+                            border-radius: 70px;
+                            color: white;
+                            font-size: 32px;
+                            font-weight: bold;
+                        }
+                        QPushButton:hover {
+                            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #34d399, stop:1 #10b981);}
+                        QPushButton:pressed {
+                            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #059669, stop:1 #047857);}
+                    """)
+                else:
+                    self.mic_button.setStyleSheet("""
+                        QPushButton {
+                            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #ef4444, stop:1 #dc2626);
+                            border: none;
+                            border-radius: 70px;
+                            color: white;
+                            font-size: 32px;
+                            font-weight: bold;
+                        }
+                        QPushButton:hover {
+                            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #f87171, stop:1 #ef4444);}
+                        QPushButton:pressed {
+                            background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                                stop:0 #dc2626, stop:1 #b91c1c);}
+                    """)
+    
     def loadMessage(self):
         try:
             with open(TempDirectoryPath('Responses.data'), "r", encoding='utf-8') as file:
@@ -908,11 +1254,11 @@ class ModernIntegratedScreen(QWidget):
                 # Display all messages with proper colors
                 for line in new_lines:
                     if "👤" in line:
-                        self.addMessages(line, "#89b4fa")  # Blue for user
+                        self.addMessages(line, "#0ea5e9")  # Blue for user
                     elif "🤖" in line:
-                        self.addMessages(line, "#a6e3a1")  # Green for AI
+                        self.addMessages(line, "#10b981")  # Green for AI
                     else:
-                        self.addMessages(line, "#cdd6f4")  # White for other
+                        self.addMessages(line, "#e2e8f0")  # White for other
                 
                 # Update the last processed message
                 self.last_processed_message = messages
@@ -926,7 +1272,7 @@ class ModernIntegratedScreen(QWidget):
         
         format = QTextCharFormat()
         format.setForeground(QColor(color))
-        format.setFontWeight(QFont.Bold if color == "#89b4fa" else QFont.Normal)
+        format.setFontWeight(QFont.Bold if color == "#0ea5e9" else QFont.Normal)
         
         formatm = QTextBlockFormat()
         formatm.setLineHeight(150, QTextBlockFormat.ProportionalHeight)
@@ -978,7 +1324,7 @@ class ModernIntegratedScreen(QWidget):
             print(f"Error clearing chat: {e}")
     
     def populate_input_devices(self):
-        """Populate input device dropdown with available microphones"""
+        """Populate input device dropdown with currently available microphones"""
         try:
             import pyaudio
             p = pyaudio.PyAudio()
@@ -986,11 +1332,36 @@ class ModernIntegratedScreen(QWidget):
             self.input_device_combo.clear()
             self.input_device_combo.addItem("Default Microphone")
             
+            # Get default input device
+            try:
+                default_input = p.get_default_input_device_info()
+                if default_input:
+                    self.input_device_combo.addItem(f"🎤 {default_input['name']} (Default)")
+            except:
+                pass
+            
+            # Get currently available input devices
+            available_devices = []
             for i in range(p.get_device_count()):
-                device_info = p.get_device_info_by_index(i)
-                if device_info['maxInputChannels'] > 0:  # Input device
-                    device_name = device_info['name']
-                    self.input_device_combo.addItem(f"{device_name}")
+                try:
+                    device_info = p.get_device_info_by_index(i)
+                    if device_info['maxInputChannels'] > 0:  # Input device
+                        # Check if device is currently available
+                        if device_info['hostApi'] == 0:  # Windows DirectSound
+                            device_name = device_info['name']
+                            # Filter out virtual devices and duplicates
+                            if not any(keyword in device_name.lower() for keyword in 
+                                      ['virtual', 'cable', 'loopback', 'stereo mix']):
+                                available_devices.append(device_name)
+                except:
+                    continue
+            
+            # Add unique available devices
+            seen_devices = set()
+            for device_name in available_devices:
+                if device_name not in seen_devices:
+                    self.input_device_combo.addItem(f"🎤 {device_name}")
+                    seen_devices.add(device_name)
             
             p.terminate()
             
@@ -999,7 +1370,7 @@ class ModernIntegratedScreen(QWidget):
             self.input_device_combo.addItem("Default Microphone")
     
     def populate_output_devices(self):
-        """Populate output device dropdown with available speakers"""
+        """Populate output device dropdown with currently available speakers"""
         try:
             import pyaudio
             p = pyaudio.PyAudio()
@@ -1007,11 +1378,36 @@ class ModernIntegratedScreen(QWidget):
             self.output_device_combo.clear()
             self.output_device_combo.addItem("Default Speakers")
             
+            # Get default output device
+            try:
+                default_output = p.get_default_output_device_info()
+                if default_output:
+                    self.output_device_combo.addItem(f"🔊 {default_output['name']} (Default)")
+            except:
+                pass
+            
+            # Get currently available output devices
+            available_devices = []
             for i in range(p.get_device_count()):
-                device_info = p.get_device_info_by_index(i)
-                if device_info['maxOutputChannels'] > 0:  # Output device
-                    device_name = device_info['name']
-                    self.output_device_combo.addItem(f"{device_name}")
+                try:
+                    device_info = p.get_device_info_by_index(i)
+                    if device_info['maxOutputChannels'] > 0:  # Output device
+                        # Check if device is currently available
+                        if device_info['hostApi'] == 0:  # Windows DirectSound
+                            device_name = device_info['name']
+                            # Filter out virtual devices and duplicates
+                            if not any(keyword in device_name.lower() for keyword in 
+                                      ['virtual', 'cable', 'loopback', 'stereo mix']):
+                                available_devices.append(device_name)
+                except:
+                    continue
+            
+            # Add unique available devices
+            seen_devices = set()
+            for device_name in available_devices:
+                if device_name not in seen_devices:
+                    self.output_device_combo.addItem(f"🔊 {device_name}")
+                    seen_devices.add(device_name)
             
             p.terminate()
             
@@ -1019,22 +1415,106 @@ class ModernIntegratedScreen(QWidget):
             print(f"Error populating output devices: {e}")
             self.output_device_combo.addItem("Default Speakers")
     
+    def refresh_devices(self):
+        """Refresh the device dropdowns with currently available devices"""
+        try:
+            print("🔄 Refreshing audio devices...")
+            
+            # Add a brief animation to the refresh button
+            self.refresh_devices_btn.setText("⏳ Refreshing...")
+            self.refresh_devices_btn.setStyleSheet("""
+                QPushButton {
+                    background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                        stop:0 #f59e0b, stop:1 #d97706);
+                    border: 2px solid #f59e0b;
+                    border-radius: 8px;
+                    color: white;
+                    font-family: 'Segoe UI', Arial, sans-serif;
+                    font-size: 14px;
+                    font-weight: bold;
+                    padding: 8px 12px;
+                    min-width: 80px;
+                }
+            """)
+            
+            # Refresh both dropdowns
+            self.populate_input_devices()
+            self.populate_output_devices()
+            
+            # Reset button after a short delay
+            QTimer.singleShot(1000, self.reset_refresh_button)
+            
+        except Exception as e:
+            print(f"Error refreshing devices: {e}")
+            self.reset_refresh_button()
+    
+    def reset_refresh_button(self):
+        """Reset the refresh button to normal state"""
+        self.refresh_devices_btn.setText("🔄 Refresh")
+        self.refresh_devices_btn.setStyleSheet("""
+            QPushButton {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #6366f1, stop:1 #4f46e5);
+                border: 2px solid #6366f1;
+                border-radius: 8px;
+                color: white;
+                font-family: 'Segoe UI', Arial, sans-serif;
+                font-size: 14px;
+                font-weight: bold;
+                padding: 8px 12px;
+                min-width: 80px;
+            }
+            QPushButton:hover {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #818cf8, stop:1 #6366f1);
+                border: 2px solid #818cf8;}
+            QPushButton:pressed {
+                background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
+                    stop:0 #4f46e5, stop:1 #3730a3);}
+        """)
+            
     def toggle_mic(self):
-        """Toggle microphone on/off"""
+        """Toggle microphone on/off with improved state management"""
         try:
             if self.mic_active:
                 # Turn off microphone
                 SetMicrophoneStatus("False")
                 self.mic_active = False
                 self.mic_button.setText("🔇")
-                self.status_label.setText("Microphone OFF")
+                self.status_label.setText("🔇 Microphone OFF")
+                self.status_label.setStyleSheet("""
+                    QLabel {
+                        color: #ef4444;
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                        font-size: 22px;
+                        font-weight: 300;
+                        margin: 25px;
+                        padding: 15px;
+                        background: rgba(239, 68, 68, 0.15);
+                        border-radius: 15px;
+                        border: 1px solid rgba(239, 68, 68, 0.4);
+                    }
+                """)
                 print("🎤 Microphone turned OFF")
             else:
                 # Turn on microphone
                 SetMicrophoneStatus("True")
                 self.mic_active = True
                 self.mic_button.setText("🎤")
-                self.status_label.setText("Listening...")
+                self.status_label.setText("🎧 Listening...")
+                self.status_label.setStyleSheet("""
+                    QLabel {
+                        color: #0ea5e9;
+                        font-family: 'Segoe UI', Arial, sans-serif;
+                        font-size: 22px;
+                        font-weight: 300;
+                        margin: 25px;
+                        padding: 15px;
+                        background: rgba(14, 165, 233, 0.15);
+                        border-radius: 15px;
+                        border: 1px solid rgba(14, 165, 233, 0.4);
+                    }
+                """)
                 print("🎤 Microphone turned ON")
             
             self.update_mic_button()
@@ -1043,48 +1523,46 @@ class ModernIntegratedScreen(QWidget):
             print(f"Error toggling microphone: {e}")
     
     def update_mic_button(self):
-        """Update microphone button appearance based on status"""
+        """Update microphone button appearance based on status with enhanced animations"""
         try:
             if self.mic_active:
                 self.mic_button.setStyleSheet("""
                     QPushButton {
                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                            stop:0 #a6e3a1, stop:1 #94e2d5);
+                            stop:0 #10b981, stop:1 #059669);
                         border: none;
-                        border-radius: 60px;
+                        border-radius: 70px;
                         color: white;
-                        font-size: 24px;
+                        font-size: 32px;
                         font-weight: bold;
                     }
                     QPushButton:hover {
                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                            stop:0 #b4e6a8, stop:1 #a6e3a1);
-                    }
+                            stop:0 #34d399, stop:1 #10b981);}
                     QPushButton:pressed {
                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                            stop:0 #94e2d5, stop:1 #a6e3a1);
-                    }
+                            stop:0 #059669, stop:1 #047857);}
                 """)
+                self.mic_button.setText("⏹️")
             else:
                 self.mic_button.setStyleSheet("""
                     QPushButton {
                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                            stop:0 #f38ba8, stop:1 #eba0ac);
+                            stop:0 #ef4444, stop:1 #dc2626);
                         border: none;
-                        border-radius: 60px;
+                        border-radius: 70px;
                         color: white;
-                        font-size: 24px;
+                        font-size: 32px;
                         font-weight: bold;
                     }
                     QPushButton:hover {
                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                            stop:0 #f5c2e7, stop:1 #f38ba8);
-                    }
+                            stop:0 #f87171, stop:1 #ef4444);}
                     QPushButton:pressed {
                         background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                            stop:0 #eba0ac, stop:1 #f38ba8);
-                    }
+                            stop:0 #dc2626, stop:1 #b91c1c);}
                 """)
+                self.mic_button.setText("🎤")
         except Exception as e:
             print(f"Error updating mic button: {e}")
 
@@ -1526,34 +2004,35 @@ class ModernTopBar(QWidget):
         self.initUI()
         
     def initUI(self):
-        self.setFixedHeight(60)
+        self.setFixedHeight(70)  # Increased height
         self.setStyleSheet("""
             QWidget {
                 background: qlineargradient(x1:0, y1:0, x2:0, y2:1,
-                    stop:0 #2c3e50, stop:1 #34495e);
-                border-bottom: 2px solid #4a90e2;
+                    stop:0 #1a1a2e, stop:1 #16213e);
+                border-bottom: 3px solid #0ea5e9;
             }
         """)
         
         layout = QHBoxLayout(self)
-        layout.setContentsMargins(20, 10, 20, 10)
-        layout.setSpacing(15)
+        layout.setContentsMargins(25, 15, 25, 15)
+        layout.setSpacing(20)
         
-        # Title with modern styling
+        # Enhanced title with larger font
         title_label = QLabel(f"🤖  AI Assistant")
         title_label.setStyleSheet("""
             QLabel {
                 color: #ffffff;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 20px;
+                font-size: 24px;
                 font-weight: bold;
+
             }
         """)
         
-        # Window control buttons
+        # Enhanced window control buttons
         minimize_btn = self.create_control_button("─", self.minimize_window)
         maximize_btn = self.create_control_button("□", self.maximize_window)
-        close_btn = self.create_control_button("✕", self.close_window, "#e74c3c")
+        close_btn = self.create_control_button("✕", self.close_window, "#ef4444")
         
         layout.addWidget(title_label)
         layout.addStretch(1)
@@ -1590,23 +2069,23 @@ class ModernTopBar(QWidget):
         button.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(index))
         return button
         
-    def create_control_button(self, text, callback, color="#4a90e2"):
+    def create_control_button(self, text, callback, color="#0ea5e9"):
         button = QPushButton(text)
         button.setStyleSheet(f"""
             QPushButton {{
                 background: {color};
                 border: none;
-                border-radius: 4px;
+                border-radius: 8px;
                 color: white;
                 font-family: 'Segoe UI', Arial, sans-serif;
-                font-size: 12px;
+                font-size: 14px;
                 font-weight: bold;
-                padding: 6px 12px;
-                min-width: 30px;
+                padding: 8px 16px;
+                min-width: 35px;
             }}
             QPushButton:hover {{
-                background: {color.replace('e2', 'f2') if 'e2' in color else color.replace('3c', '4c')};
-            }}
+                background: {color.replace('e9', 'f8') if 'e9' in color else color.replace('44', '55')};}}
+            QPushButton:pressed {{}}
         """)
         button.clicked.connect(callback)
         return button
@@ -1643,11 +2122,13 @@ class ModernMainWindow(QMainWindow):
         screen_width = desktop.screenGeometry().width()
         screen_height = desktop.screenGeometry().height()
         
-        # Set window properties with pitch black background
+        # Set window properties with enhanced styling
         self.setGeometry(0, 0, screen_width, screen_height)
         self.setStyleSheet("""
             QMainWindow {
                 background: #000000;
+                border: 2px solid #0ea5e9;
+                border-radius: 10px;
             }
         """)
         
@@ -1662,8 +2143,8 @@ class ModernMainWindow(QMainWindow):
 def ModernGraphicalUserInterface():
     app = QApplication(sys.argv)
     
-    # Set application-wide font
-    font = QFont("Segoe UI", 9)
+    # Set application-wide font with larger size
+    font = QFont("Segoe UI", 11)
     app.setFont(font)
     
     window = ModernMainWindow()
