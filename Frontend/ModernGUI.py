@@ -74,6 +74,30 @@ def TempDirectoryPath(Filename):
     Path = rf'{TempDirPath}\{Filename}'
     return Path
 
+# Global reference to main window for external access
+_main_window_instance = None
+
+def get_main_window():
+    """Get the main window instance for external access"""
+    return _main_window_instance
+
+# Global signal for email dialog requests
+_email_dialog_request = None
+
+def set_email_dialog_request(request_data):
+    """Set email dialog request data for main thread to process"""
+    global _email_dialog_request
+    _email_dialog_request = request_data
+
+def get_email_dialog_request():
+    """Get and clear email dialog request data"""
+    global _email_dialog_request
+    if _email_dialog_request:
+        data = _email_dialog_request
+        _email_dialog_request = None
+        return data
+    return None
+
 def ShowTextToScreen(Text):
     with open(rf'{TempDirPath}\Responses.data', "w", encoding='utf-8') as file:
         file.write(Text)
@@ -2268,6 +2292,49 @@ class ModernMainWindow(QMainWindow):
         self.setWindowFlags(Qt.FramelessWindowHint)
         self.initUI()
         
+        # Set up timer to check for email dialog requests
+        from PyQt5.QtCore import QTimer
+        self.email_timer = QTimer()
+        self.email_timer.timeout.connect(self.check_email_dialog_requests)
+        self.email_timer.start(100)  # Check every 100ms
+        
+    def check_email_dialog_requests(self):
+        """Check for email dialog requests and process them in main thread"""
+        try:
+            from Frontend.ModernGUI import get_email_dialog_request
+            request_data = get_email_dialog_request()
+            
+            if request_data and isinstance(request_data, dict):
+                # Process email dialog request in main thread
+                self.process_email_dialog_request(request_data)
+                
+        except Exception as e:
+            print(f"Error checking email dialog requests: {e}")
+    
+    def process_email_dialog_request(self, request_data):
+        """Process email dialog request in main thread"""
+        try:
+            from Backend.PrivacyProtectedEmail import PrivacyProtectedEmailDialog
+            
+            # Create and show the dialog in main thread
+            dialog = PrivacyProtectedEmailDialog(request_data["subject"], request_data["body"])
+            
+            # Show dialog and wait for result
+            result = dialog.exec_()
+            
+            if result == 1:  # QDialog.Accepted
+                # Clear stored content after successful send
+                from Backend.PrivacyProtectedEmail import PrivacyProtectedEmailSystem
+                email_system = PrivacyProtectedEmailSystem()
+                email_system.last_email_subject = ""
+                email_system.last_email_body = ""
+                print("Email dialog completed successfully.")
+            else:
+                print("Email sending cancelled.")
+                
+        except Exception as e:
+            print(f"Error processing email dialog request: {e}")
+        
     def initUI(self):
         desktop = QApplication.desktop()
         screen_width = desktop.screenGeometry().width()
@@ -2299,6 +2366,11 @@ def ModernGraphicalUserInterface():
     app.setFont(font)
     
     window = ModernMainWindow()
+    
+    # Set global reference for external access
+    global _main_window_instance
+    _main_window_instance = window
+    
     window.show()
     sys.exit(app.exec_())
 

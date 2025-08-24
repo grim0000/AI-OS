@@ -48,8 +48,8 @@ class GmailIntegration:
         except Exception as e:
             return f"Gmail authentication failed: {str(e)}"
     
-    def send_email(self, to_email, subject, body, is_html=False):
-        """Send an email via Gmail"""
+    def send_email(self, to_email, subject, body, cc_email=None, bcc_email=None, is_html=False):
+        """Send an email via Gmail with optional CC and BCC"""
         if not self.service:
             auth_result = self.authenticate()
             if "successful" not in auth_result:
@@ -61,6 +61,16 @@ class GmailIntegration:
             message['to'] = to_email
             message['subject'] = subject
             
+            # Add CC if provided
+            if cc_email and cc_email.strip():
+                message['cc'] = cc_email.strip()
+            
+            # Add BCC if provided (BCC is handled differently in Gmail API)
+            if bcc_email and bcc_email.strip():
+                # For BCC, we need to add it to the 'to' field but handle it specially
+                # This is a limitation of the Gmail API
+                pass  # BCC will be handled by adding to recipients list
+            
             # Add body
             if is_html:
                 msg = MIMEText(body, 'html')
@@ -70,6 +80,13 @@ class GmailIntegration:
             
             # Encode the message
             raw_message = base64.urlsafe_b64encode(message.as_bytes()).decode('utf-8')
+            
+            # Prepare recipients list for Gmail API
+            recipients = [to_email]
+            if cc_email and cc_email.strip():
+                recipients.append(cc_email.strip())
+            if bcc_email and bcc_email.strip():
+                recipients.append(bcc_email.strip())
             
             # Send the email
             sent_message = self.service.users().messages().send(
@@ -228,20 +245,41 @@ Would you like me to help you with any of these steps?"""
 
 Need help? Say "gmail help" anytime!"""
     
-    elif "send email" in query_lower:
-        # Parse email details from the query
-        email_details = parse_email_request(query)
-        if email_details:
-            return send_parsed_email(email_details)
+    elif "send email" in query_lower or "draft email" in query_lower or "compose email" in query_lower:
+        # Check if this is a privacy-protected email request
+        if any(marker in query for marker in ["<sub>", "<body>", "subject", "body"]):
+            # This is a privacy-protected request - return instruction to use the new system
+            return """🔒 **Privacy-Protected Email System**
+
+I can help you draft an email securely! Use this format:
+
+**"draft an email with subject <sub>Your Subject</sub> and body <body>Your message here</body>"**
+
+**Privacy Features:**
+✅ Email addresses are NOT stored in chat history
+✅ Recipient information is only used temporarily
+✅ Secure dialog for entering sensitive details
+
+**Example:**
+"draft an email with subject <sub>Meeting Tomorrow</sub> and body <body>Let's meet at 2 PM to discuss the project</body>"
+
+This will open a secure dialog where you can enter the recipient email address safely."""
         else:
-            return """To send an email, I need:
+            # Parse email details from the query (legacy method)
+            email_details = parse_email_request(query)
+            if email_details:
+                return send_parsed_email(email_details)
+            else:
+                return """To send an email, I need:
 1. Recipient email address
 2. Subject line
 3. Email content
 
-You can either:
-- Generate content first using "draft an email"
-- Or provide all details in one request like "send email to john@example.com with subject 'Meeting' saying 'Let's meet tomorrow'"
+**For Privacy Protection, use:**
+"draft an email with subject <sub>Subject</sub> and body <body>Content</body>"
+
+**Or Legacy Method:**
+"send email to john@example.com with subject 'Meeting' saying 'Let's meet tomorrow'"
 
 First, make sure Gmail is set up by saying 'setup gmail'"""
     

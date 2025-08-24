@@ -1,0 +1,10 @@
+Here is an email with the subject "Meeting" and the body "Let's meet today":
+
+Subject: Meeting
+
+Dear [Recipient's Name],
+
+Let's meet today.
+
+Best regards,
+[Your Name]

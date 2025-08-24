@@ -14,6 +14,7 @@ from Backend.SpeechToText import SpeechRecognition
 from Backend.TextToSpeech import TextToSpeech, set_heartbeat_interface
 from Backend.InteractiveDrafting import handle_drafting_request, get_current_drafting_question
 from Backend.GmailIntegration import handle_gmail_request
+from Backend.PrivacyProtectedEmail import PrivacyProtectedEmailSystem
 from Backend.ReinforcementLearningSystem import rl_system
 from Backend.FeedbackHandler import handle_feedback_request, process_pending_feedback
 from dotenv import dotenv_values
@@ -31,7 +32,10 @@ DefaultMessage = f'''{Username} : Hello, I am {Assistantname}, How are you?
 {Assistantname} : Welcome {Username}. I am doing well.How can I help you?''' 
 
 # List of available functions for automation
-Functions = ["open", "close", "play", "system", "content", "google search", "youtube search", "clean up"] 
+Functions = ["open", "close", "play", "system", "content", "google search", "youtube search", "clean up"]
+
+# Initialize privacy-protected email system
+privacy_email_system = PrivacyProtectedEmailSystem() 
 
 
 def ShowDefaultChatIfNoChats():
@@ -111,10 +115,75 @@ def MainExecution(use_text_input=False, text_query=""):
     ShowTextToScreen(f"{Username} : {Query}")
     SetAssistantStatus("Thinking...")
     
-    # Direct Gmail command recognition (bypasses AI model to avoid rate limits)
+    # Check for privacy-protected email requests FIRST (highest priority)
     QueryLower = Query.lower()
-    if any(gmail_cmd in QueryLower for gmail_cmd in ["gmail", "email", "send email", "setup gmail"]):
+    
+    # Check if this is a privacy-protected email request
+    if any(marker in Query for marker in ["<sub>", "<body>", "subject", "body"]) and any(cmd in QueryLower for cmd in ["draft", "compose", "send"]):
+        SetAssistantStatus("Processing Privacy-Protected Email...")
+        try:
+            # Handle the privacy-protected email request
+            response = privacy_email_system.handle_email_request(Query)
+            Answer = response
+            ShowTextToScreen(f"{Assistantname} : {Answer}")
+            SetAssistantStatus("Answering...")
+            if not use_text_input:
+                TextToSpeech(Answer)
+            else:
+                SetAssistantStatus("Ready")
+            return True
+        except Exception as e:
+            Answer = f"Privacy-protected email system error: {str(e)}"
+            ShowTextToScreen(f"{Assistantname} : {Answer}")
+            SetAssistantStatus("Answering...")
+            if not use_text_input:
+                TextToSpeech(Answer)
+            else:
+                SetAssistantStatus("Ready")
+            return True
+    
+    # Check if user wants to open the email dialog
+    elif "open email dialog" in QueryLower or "show email dialog" in QueryLower:
+        SetAssistantStatus("Opening Email Dialog...")
+        try:
+            # Get the email content from the privacy system
+            response = privacy_email_system.open_email_dialog()
+            
+            # Check if response is a dictionary (success) or string (error)
+            if isinstance(response, dict) and response.get("action") == "open_email_dialog":
+                # Set the email dialog request for the main GUI thread to process
+                try:
+                    from Frontend.ModernGUI import set_email_dialog_request
+                    set_email_dialog_request(response)
+                    Answer = "Email dialog request sent to main thread. The dialog will open shortly."
+                except Exception as e:
+                    Answer = f"Error setting dialog request: {str(e)}"
+            else:
+                # Error response
+                Answer = response
+                
+            ShowTextToScreen(f"{Assistantname} : {Answer}")
+            SetAssistantStatus("Answering...")
+            if not use_text_input:
+                TextToSpeech(Answer)
+            else:
+                SetAssistantStatus("Ready")
+            return True
+        except Exception as e:
+            Answer = f"Error opening email dialog: {str(e)}"
+            ShowTextToScreen(f"{Assistantname} : {Answer}")
+            SetAssistantStatus("Answering...")
+            if not use_text_input:
+                TextToSpeech(Answer)
+            else:
+                SetAssistantStatus("Ready")
+            return True
+    
+    # Direct Gmail command recognition (bypasses AI model to avoid rate limits)
+    elif any(gmail_cmd in QueryLower for gmail_cmd in ["gmail", "email", "send email", "setup gmail"]):
         SetAssistantStatus("Processing Gmail...")
+        
+        # Regular Gmail command
         gmail_response = handle_gmail_request(Query)
         if gmail_response:
             Answer = gmail_response
