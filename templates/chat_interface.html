@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">Chat Interface</h1>
+    <p class="content-subtitle">Direct conversation with JARVIS AI</p>
+</div>
+
+<div class="chat-container">
+    <div class="chat-header">
+        <div></div>
+        <div class="chat-actions">
+            <button class="btn btn-secondary">
+                <i class="fas fa-download"></i>
+                Export
+            </button>
+            <button class="btn btn-danger">
+                <i class="fas fa-times"></i>
+                Clear
+            </button>
+        </div>
+    </div>
+    
+    <div class="chat-messages">
+        <div class="message jarvis">
+            <div class="message-avatar jarvis">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                <div class="message-bubble">
+                    <div class="message-text">Hello! I'm JARVIS, your AI assistant. I can help you with voice commands, system automation, screen analysis, and more. What would you like to do?</div>
+                    <div class="message-time">1:56:51 am</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="message user">
+            <div class="message-avatar user">
+                <i class="fas fa-user"></i>
+            </div>
+            <div class="message-content">
+                <div class="message-bubble">
+                    <div class="message-text">Open Spotify and play some music</div>
+                    <div class="message-time">1:57:51 am</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="message jarvis">
+            <div class="message-avatar jarvis">
+                <i class="fas fa-robot"></i>
+            </div>
+            <div class="message-content">
+                <div class="message-bubble">
+                    <div class="message-text">I've opened Spotify and started playing music for you. The current track is "Bohemian Rhapsody" by Queen. Would you like me to search for a specific song or artist?</div>
+                    <div class="message-time">1:58:51 am</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="chat-input-container">
+        <textarea class="chat-input" placeholder="Type your message to JARVIS..."></textarea>
+        <button class="send-button">
+            <i class="fas fa-paper-plane"></i>
+        </button>
+    </div>
+</div>
+{% endblock %}

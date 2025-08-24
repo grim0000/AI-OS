@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">Settings</h1>
+    <p class="content-subtitle">Configure JARVIS AI assistant preferences</p>
+</div>
+
+<div class="settings-container">
+    <div class="settings-grid">
+        <div class="settings-card">
+            <div class="settings-card-title">
+                <i class="fas fa-microphone"></i>
+                Voice & Audio
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">Speech Rate</label>
+                <div class="slider-container">
+                    <input type="range" class="slider" name="speech_rate" min="0.5" max="2.0" step="0.1" value="1.0">
+                    <span class="slider-value">1.0</span>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">Voice Volume</label>
+                <div class="slider-container">
+                    <input type="range" class="slider" name="voice_volume" min="0" max="100" value="80">
+                    <span class="slider-value">80</span>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">Microphone Sensitivity</label>
+                <div class="slider-container">
+                    <input type="range" class="slider" name="microphone_sensitivity" min="0" max="100" value="70">
+                    <span class="slider-value">70</span>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <div class="checkbox-container">
+                    <input type="checkbox" class="checkbox" name="continuous_listening" id="continuous_listening">
+                    <label class="checkbox-label" for="continuous_listening">Continuous Listening Mode</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-card">
+            <div class="settings-card-title">
+                <i class="fas fa-eye"></i>
+                Screen & Vision
+            </div>
+            
+            <div class="setting-item">
+                <div class="checkbox-container">
+                    <input type="checkbox" class="checkbox" name="screen_monitoring" id="screen_monitoring" checked>
+                    <label class="checkbox-label" for="screen_monitoring">Enable Screen Monitoring</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-card">
+            <div class="settings-card-title">
+                <i class="fas fa-cog"></i>
+                General
+            </div>
+            
+            <div class="setting-item">
+                <div class="checkbox-container">
+                    <input type="checkbox" class="checkbox" name="notifications" id="notifications" checked>
+                    <label class="checkbox-label" for="notifications">Enable Notifications</label>
+                </div>
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">Dark Theme</label>
+                <div class="checkbox-container">
+                    <input type="checkbox" class="checkbox" name="dark_theme" id="dark_theme" checked>
+                    <label class="checkbox-label" for="dark_theme">Enabled</label>
+                </div>
+            </div>
+        </div>
+        
+        <div class="settings-card">
+            <div class="settings-card-title">
+                <i class="fas fa-key"></i>
+                API Configuration
+            </div>
+            
+            <div class="setting-item">
+                <label class="setting-label">Groq API Key</label>
+                <input type="password" class="api-key-input" name="api_key" placeholder="Enter your Groq API key">
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

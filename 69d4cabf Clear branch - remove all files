@@ -1,0 +1,19 @@
+[33m69d4cabf[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mfinal240825[m[33m)[m Clear branch - remove all files
+[33m990a6ee6[m Remove virtual environment files from final240825 branch
+[33mf0e1b316[m Final version 240825: Complete Jarvis AI Assistant with all fixes and features
+[33me04b1bd5[m[33m ([m[1;31morigin/pragna-email[m[33m)[m Add Gmail feature with privacy protection and automatic dialog system
+[33m6939304c[m Remove sensitive files from repo
+[33m6a1258b2[m done
+[33mff9a3ec3[m email works
+[33ma4469471[m[33m ([m[1;31morigin/1am[m[33m)[m Update ModernGUI.py
+[33m34f7f5d3[m initial
+[33m23f7f7cf[m first commit
+[33m41e7da37[m[33m ([m[1;32m500pm[m[33m, [m[1;32m1am[m[33m)[m 1am
+[33m95a33b10[m 9:00pm
+[33mc4b2bbae[m 7:40pm
+[33m4e85c707[m[33m ([m[1;31morigin/500pm[m[33m)[m Enhanced UI with text input functionality and improved error handling
+[33m20d2594e[m[33m ([m[1;32mbroken-2nd-gen[m[33m)[m 3:58
+[33me20ec2c4[m[33m ([m[1;31morigin/broken-2nd-gen[m[33m)[m broken 2nd gen: Complete UI overhaul with integrated chat, device dropdowns, and enhanced automation
+[33m2429d7ca[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m Update README.md
+[33macf6d6bd[m Create README.md
+[33m14e25953[m[33m ([m[1;32mmain[m[33m)[m Initial commit including venv

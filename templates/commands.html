@@ -1,0 +1,209 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">Command Palette</h1>
+    <p class="content-subtitle">Complete list of available voice commands</p>
+</div>
+
+<div class="commands-container">
+    <div class="categories-sidebar">
+        <div class="categories-title">Categories</div>
+        <div class="category-item active">
+            <span>All Commands</span>
+            <span class="category-count">15</span>
+        </div>
+        <div class="category-item">
+            <span>Music Control</span>
+            <span class="category-count">2</span>
+        </div>
+        <div class="category-item">
+            <span>System Control</span>
+            <span class="category-count">4</span>
+        </div>
+        <div class="category-item">
+            <span>File Operations</span>
+            <span class="category-count">2</span>
+        </div>
+        <div class="category-item">
+            <span>Applications</span>
+            <span class="category-count">4</span>
+        </div>
+        <div class="category-item">
+            <span>Communication</span>
+            <span class="category-count">1</span>
+        </div>
+        <div class="category-item">
+            <span>Screen Vision</span>
+            <span class="category-count">2</span>
+        </div>
+    </div>
+    
+    <div class="commands-grid">
+        <div class="command-card" data-category="Music Control">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <div class="command-title">Play Music</div>
+            </div>
+            <div class="command-description">Open Spotify and play music</div>
+            <div class="command-example">"Open Spotify and play Bohemian Rhapsody"</div>
+        </div>
+        
+        <div class="command-card" data-category="Music Control">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-music"></i>
+                </div>
+                <div class="command-title">Play Song</div>
+            </div>
+            <div class="command-description">Play a specific song on Spotify</div>
+            <div class="command-example">"Play Hotel California on Spotify"</div>
+        </div>
+        
+        <div class="command-card" data-category="System Control">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-bed"></i>
+                </div>
+                <div class="command-title">Sleep Computer</div>
+            </div>
+            <div class="command-description">Put the computer into sleep mode</div>
+            <div class="command-example">"Put my laptop to sleep"</div>
+        </div>
+        
+        <div class="command-card" data-category="Screen Vision">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <div class="command-title">Take Screenshot</div>
+            </div>
+            <div class="command-description">Take a screenshot of the current screen</div>
+            <div class="command-example">"Take a screenshot"</div>
+        </div>
+        
+        <div class="command-card" data-category="Applications">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <div class="command-title">Open Camera</div>
+            </div>
+            <div class="command-description">Open the Windows Camera app</div>
+            <div class="command-example">"Open camera"</div>
+        </div>
+        
+        <div class="command-card" data-category="System Control">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-lock"></i>
+                </div>
+                <div class="command-title">Lock Computer</div>
+            </div>
+            <div class="command-description">Lock the computer screen</div>
+            <div class="command-example">"Lock my computer"</div>
+        </div>
+        
+        <div class="command-card" data-category="File Operations">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-hdd"></i>
+                </div>
+                <div class="command-title">Open Drive</div>
+            </div>
+            <div class="command-description">Open a specific drive in file explorer</div>
+            <div class="command-example">"Open C drive"</div>
+        </div>
+        
+        <div class="command-card" data-category="File Operations">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-folder"></i>
+                </div>
+                <div class="command-title">Open Folder</div>
+            </div>
+            <div class="command-description">Open Documents, Downloads, etc.</div>
+            <div class="command-example">"Open Documents folder"</div>
+        </div>
+        
+        <div class="command-card" data-category="Applications">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-chrome"></i>
+                </div>
+                <div class="command-title">Open Browser</div>
+            </div>
+            <div class="command-description">Open web browser</div>
+            <div class="command-example">"Open Chrome"</div>
+        </div>
+        
+        <div class="command-card" data-category="Applications">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-envelope"></i>
+                </div>
+                <div class="command-title">Open Email</div>
+            </div>
+            <div class="command-description">Open email client</div>
+            <div class="command-example">"Open Gmail"</div>
+        </div>
+        
+        <div class="command-card" data-category="Communication">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-phone"></i>
+                </div>
+                <div class="command-title">Make Call</div>
+            </div>
+            <div class="command-description">Initiate a phone call</div>
+            <div class="command-example">"Call John"</div>
+        </div>
+        
+        <div class="command-card" data-category="System Control">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-power-off"></i>
+                </div>
+                <div class="command-title">Shutdown</div>
+            </div>
+            <div class="command-description">Shutdown the computer</div>
+            <div class="command-example">"Shutdown computer"</div>
+        </div>
+        
+        <div class="command-card" data-category="System Control">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-redo"></i>
+                </div>
+                <div class="command-title">Restart</div>
+            </div>
+            <div class="command-description">Restart the computer</div>
+            <div class="command-example">"Restart computer"</div>
+        </div>
+        
+        <div class="command-card" data-category="Screen Vision">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <div class="command-title">Screen Analysis</div>
+            </div>
+            <div class="command-description">Analyze screen content</div>
+            <div class="command-example">"Analyze screen"</div>
+        </div>
+        
+        <div class="command-card" data-category="Applications">
+            <div class="command-header">
+                <div class="command-icon">
+                    <i class="fas fa-terminal"></i>
+                </div>
+                <div class="command-title">Open Terminal</div>
+            </div>
+            <div class="command-description">Open command prompt or terminal</div>
+            <div class="command-example">"Open terminal"</div>
+        </div>
+    </div>
+</div>
+{% endblock %}

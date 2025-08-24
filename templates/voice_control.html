@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">Voice Control</h1>
+    <p class="content-subtitle">Voice recognition and audio control center</p>
+</div>
+
+<div class="voice-control-container">
+    <button class="microphone-button">
+        <i class="fas fa-microphone"></i>
+    </button>
+    
+    <div class="audio-level">
+        <div class="audio-level-label">
+            <i class="fas fa-volume-up"></i>
+            Audio Level
+        </div>
+        <div class="audio-level-bar">
+            <div class="audio-level-fill"></div>
+        </div>
+    </div>
+    
+    <div class="device-selection">
+        <div class="device-group">
+            <div class="device-group-title">
+                <i class="fas fa-cog"></i>
+                Input Devices
+            </div>
+            <div class="device-option">
+                <div class="device-radio selected"></div>
+                <div class="device-name">Default Microphone</div>
+            </div>
+            <div class="device-option">
+                <div class="device-radio"></div>
+                <div class="device-name">USB Headset</div>
+            </div>
+            <div class="device-option">
+                <div class="device-radio"></div>
+                <div class="device-name">Bluetooth Audio</div>
+            </div>
+        </div>
+        
+        <div class="device-group">
+            <div class="device-group-title">
+                <i class="fas fa-volume-up"></i>
+                Output Devices
+            </div>
+            <div class="device-option">
+                <div class="device-radio selected"></div>
+                <div class="device-name">Default Speakers</div>
+            </div>
+            <div class="device-option">
+                <div class="device-radio"></div>
+                <div class="device-name">USB Headset</div>
+            </div>
+            <div class="device-option">
+                <div class="device-radio"></div>
+                <div class="device-name">Bluetooth Audio</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="last-command">
+        <div class="last-command-title">Last Command</div>
+        <div class="last-command-text">Open Spotify and play Bohemian Rhapsody</div>
+    </div>
+    
+    <div class="voice-settings">
+        <div class="card-title">
+            <i class="fas fa-sliders-h"></i>
+            Voice Settings
+        </div>
+        <div class="setting-item">
+            <label class="setting-label">Speech Rate</label>
+            <div class="slider-container">
+                <input type="range" class="slider" name="speech_rate" min="0.5" max="2.0" step="0.1" value="1.0">
+                <span class="slider-value">1.0</span>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

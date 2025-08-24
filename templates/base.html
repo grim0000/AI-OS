@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JARVIS AI Assistant v2.0</title>
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/components.css') }}">
+    
+    <!-- Socket.IO -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.2/socket.io.js"></script>
+</head>
+<body>
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <div class="tab-indicator">5173 /</div>
+        </div>
+        <div class="top-bar-center">
+            <div class="status-indicator">
+                <span class="status-dot"></span>
+                Ready JARVIS AI Assistant
+            </div>
+        </div>
+        <div class="top-bar-right">
+            <div class="system-metrics">
+                <span class="metric" id="cpu-metric">45%</span>
+                <span class="metric" id="memory-metric">62%</span>
+                <span class="metric" id="disk-metric">78%</span>
+                <span class="metric" id="battery-metric">85%</span>
+            </div>
+            <div class="time-display" id="time-display">1:57:58 am</div>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Left Sidebar -->
+        <div class="sidebar">
+            <!-- Header -->
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-cog"></i>
+                </div>
+                <div class="brand">
+                    <div class="brand-name">JARVIS</div>
+                    <div class="brand-subtitle">AI Assistant v2.0</div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="sidebar-nav">
+                <a href="/dashboard" class="nav-item" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="/voice-control" class="nav-item" data-page="voice-control">
+                    <i class="fas fa-microphone"></i>
+                    <span>Voice Control</span>
+                </a>
+                <a href="/screen-vision" class="nav-item" data-page="screen-vision">
+                    <i class="fas fa-eye"></i>
+                    <span>Screen Vision</span>
+                </a>
+                <a href="/chat-interface" class="nav-item" data-page="chat-interface">
+                    <i class="fas fa-comments"></i>
+                    <span>Chat Interface</span>
+                </a>
+                <a href="/commands" class="nav-item" data-page="commands">
+                    <i class="fas fa-keyboard"></i>
+                    <span>Commands</span>
+                </a>
+                <a href="/settings" class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a>
+            </nav>
+
+            <!-- System Status -->
+            <div class="system-status">
+                <div class="status-title">SYSTEM STATUS</div>
+                <div class="status-items">
+                    <div class="status-item" id="voice-engine-status">
+                        <i class="fas fa-microphone"></i>
+                        <span>Voice Engine</span>
+                        <span class="status-dot online"></span>
+                    </div>
+                    <div class="status-item" id="screen-vision-status">
+                        <i class="fas fa-eye"></i>
+                        <span>Screen Vision</span>
+                        <span class="status-dot online"></span>
+                    </div>
+                    <div class="status-item" id="automation-status">
+                        <i class="fas fa-cog"></i>
+                        <span>Automation</span>
+                        <span class="status-dot online"></span>
+                    </div>
+                    <div class="status-item" id="ai-model-status">
+                        <i class="fas fa-brain"></i>
+                        <span>AI Model</span>
+                        <span class="status-dot online"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Connection Status -->
+            <div class="connection-status">
+                <span class="status-dot online"></span>
+                Connected
+                <span class="status-dot online"></span>
+                Online
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-content">
+            <div class="made-in-bolt">
+                <span class="bolt-icon">b</span>
+                Made in Bolt
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/socket.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

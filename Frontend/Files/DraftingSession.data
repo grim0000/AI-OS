@@ -1,0 +1,22 @@
+{
+  "type": "document",
+  "prompt": "Drafting today and bodies let's go.",
+  "answers": {
+    "What is the main topic or purpose?": "Hello hello.",
+    "Who is the intended audience?": "draft an email to test@example.com",
+    "What tone should I use?": "draft an email to test@example.com",
+    "Any specific details or requirements?": "draft an email to test@example.com",
+    "Any deadline or urgency?": "draft an email to test@example.com"
+  },
+  "current_question": "Any deadline or urgency?",
+  "status": "completed",
+  "questions": [
+    "What is the main topic or purpose?",
+    "Who is the intended audience?",
+    "What tone should I use?",
+    "Any specific details or requirements?",
+    "Any deadline or urgency?"
+  ],
+  "current_question_index": 4,
+  "generated_content": "**Email Draft: Hello Hello**\n\n**Subject: Hello and Greetings**\n\n**To:** test@example.com\n\n**Date:** [Current Date]\n\n**Purpose:** Hello hello\n\n**Tone:** Friendly and Informal\n\n**Main Topic:** Hello hello\n\n**Body:**\n\nHello,\n\nI hope this email finds you well. I wanted to take a moment to reach out and say hello. As we discussed previously, I'm excited to start working on the project and I'm looking forward to collaborating with you.\n\nPlease let me know if you have any questions or if there's anything I can do to assist you.\n\nBest regards,\n\n[Your Name]\n\n**Note:** This email is a draft and should be reviewed before sending. Please make sure to include any necessary attachments or information before sending to test@example.com.\n\n**Requirements:**\n\n- This email is intended for a friendly and informal tone.\n- The main topic is to say hello and express enthusiasm for the project.\n- There are no specific details or requirements mentioned, so this email is a basic introduction.\n- There is no deadline or urgency mentioned, so this email can be sent at your discretion.\n\n**Urgency:** None\n\n**Additional Comments:**\n\n- Please review the email carefully before sending to ensure it meets your needs and tone.\n- If you need to add any specific details or requirements, please let me know and I'll be happy to assist you.\n\nI hope this helps! Let me know if you have any further questions or if there's anything else I can do for you."
+}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="content-header">
+    <h1 class="content-title">Screen Vision</h1>
+    <p class="content-subtitle">Real-time screen analysis and computer vision</p>
+</div>
+
+<div class="screen-vision-container">
+    <div class="screen-viewer">
+        <div class="screen-placeholder">
+            <i class="fas fa-camera"></i>
+            <div class="screen-placeholder-text">Click 'Start Monitoring' to begin screen analysis</div>
+            <div class="screen-placeholder-subtext">Real-time screen analysis and computer vision</div>
+        </div>
+        
+        <div class="screen-controls">
+            <button class="btn btn-secondary">
+                <i class="fas fa-camera"></i>
+                Take Screenshot
+            </button>
+            <button class="btn btn-secondary">
+                <i class="fas fa-eye"></i>
+                Analyze Region
+            </button>
+        </div>
+        
+        <div style="position: absolute; bottom: 10px; right: 10px; font-size: 12px; color: #94a3b8;">
+            Resolution: 1920x1080 • FPS: 30
+        </div>
+    </div>
+    
+    <div class="vision-sidebar">
+        <div class="detection-stats">
+            <div class="stats-title">Detection Stats</div>
+            <button class="btn btn-danger" style="width: 100%; margin-bottom: 16px; display: none;">
+                <i class="fas fa-stop"></i>
+                Stop Monitoring
+            </button>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">Elements Detected</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">8</div>
+                    <div class="stat-label">Clickable Areas</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">15</div>
+                    <div class="stat-label">Text Regions</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">5</div>
+                    <div class="stat-label">UI Elements</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="detected-objects">
+            <div class="objects-title">Detected Objects</div>
+            <div class="object-item">
+                <div class="object-name">Button</div>
+                <div class="object-confidence">95%</div>
+            </div>
+            <div class="object-item">
+                <div class="object-dot green"></div>
+                <div class="object-name">Text Input</div>
+                <div class="object-confidence">87%</div>
+            </div>
+            <div class="object-item">
+                <div class="object-dot yellow"></div>
+                <div class="object-name">Menu Item</div>
+                <div class="object-confidence">92%</div>
+            </div>
+            <div class="object-item">
+                <div class="object-name">Icon</div>
+                <div class="object-confidence">78%</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div style="position: absolute; top: 20px; right: 20px;">
+    <button class="btn btn-success">
+        <i class="fas fa-play"></i>
+        Start Monitoring
+    </button>
+</div>
+{% endblock %}
